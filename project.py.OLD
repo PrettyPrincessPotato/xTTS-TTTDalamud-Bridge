@@ -1,0 +1,318 @@
+import queue
+import threading
+import os
+from websockets.sync.client import connect
+import json
+import winsound
+import librosa
+
+if 'TORTOISE_MODELS_DIR' not in os.environ:
+    os.environ['TORTOISE_MODELS_DIR'] = os.path.realpath(os.path.join(os.getcwd(), './models/tortoise/'))
+
+if 'TRANSFORMERS_CACHE' not in os.environ:
+    os.environ['TRANSFORMERS_CACHE'] = os.path.realpath(os.path.join(os.getcwd(), './models/transformers/'))
+
+from tortoise.utils.audio import *
+from tortoise import api_fast
+import time, io, warnings, logging
+from rvc_pipe.rvc_infer import rvc_convert
+
+logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+logging.getLogger("DeepSpeed").setLevel(logging.ERROR)
+warnings.filterwarnings('ignore')
+
+# -- Define Model
+model_name = "loona"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+tts_voice_dir = os.path.join(script_dir,"voices")
+clips_path = os.path.join(tts_voice_dir,model_name)
+tts_models_dir = os.environ['TORTOISE_MODELS_DIR']
+finetunes_dir = os.path.join(tts_models_dir,"finetunes")
+rvc_models_dir = os.path.realpath(os.path.join(os.getcwd(), './models/rvc/weights/'))
+rvc_indicies_dir = os.path.realpath(os.path.join(os.getcwd(), './models/rvc/indicies/'))
+clips = [os.path.join(script_dir,clips_path,file) for file in os.listdir(clips_path)]
+latent_file_path = os.path.join(tts_voice_dir,f"{model_name}_latents.pth")
+
+reference_clips = [load_audio(p, 22050) for p in clips]
+tts = api_fast.TextToSpeech(use_deepspeed=True,kv_cache=True,half=True,models_dir=tts_models_dir,autoregressive_model_path=os.path.join(finetunes_dir,f"{model_name}_tts.pth"))
+
+if not os.path.exists(latent_file_path):
+    cur_latents = tts.get_conditioning_latents(reference_clips)
+    torch.save(cur_latents,latent_file_path)
+    print(f"Saved 'fast' latents to {latent_file_path}")
+
+cur_latents = torch.load(latent_file_path)
+
+# Create two Queue objects
+qRender = queue.Queue()  # Queue for rendering
+qPlay = queue.Queue()  # Queue for playing
+
+# Define your task for rendering
+def do_task_render():
+    while True:
+        jsonString = qRender.get()
+        if jsonString is None:
+            break
+        # process your jsonString here
+        print("Text received, processing...")
+        jsonFile = json.loads(jsonString)
+        text = jsonFile["Payload"]
+        print(text)
+        start = time.time()
+        pcm_audio = tts.tts(text, conditioning_latents=cur_latents)
+        end = time.time()
+
+        time_elapsed_tts=end-start
+        print(f"Generation took: {time_elapsed_tts} seconds")
+
+        audio_tensor = pcm_audio.squeeze(0).cpu()
+    
+        container = io.BytesIO()
+        sample_rate = 24000
+        torchaudio.save(container,audio_tensor,sample_rate,format="wav")
+        container.seek(0)
+
+        selected_voice="loona"
+        selected_model=os.path.join(rvc_models_dir,selected_voice+".pth")
+        selected_index=os.path.join(rvc_indicies_dir,selected_voice+".index")
+
+        start = time.time()
+        output_audio = rvc_convert(model_path=selected_model,input_path=container,file_index=selected_index,index_rate=0.7)
+        
+        time_elapsed_rvc=end-start
+        print(f"RVC took {time_elapsed_rvc} seconds, audio saved to: {output_audio}")
+        print(f"Total time taken: {time_elapsed_tts+time_elapsed_rvc} seconds")
+
+        # Put the output audio into the second queue for playing
+        qPlay.put(output_audio)
+
+        qRender.task_done()
+
+# Define your task for playing
+def do_task_play():
+    while True:
+        output_audio = qPlay.get()
+        if output_audio is None:
+            break
+        # Play the audio
+        winsound.PlaySound(output_audio, winsound.SND_FILENAME)
+        qPlay.task_done()
+
+# Start worker threads
+worker_render = threading.Thread(target=do_task_render)
+worker_play = threading.Thread(target=do_task_play)
+worker_render.start()
+worker_play.start()
+
+while True:
+    print("Attempting to connect to the websocket...")
+    with connect("ws://localhost:8080/Messages") as websocket:
+        print("Connected!")
+        jsonString = websocket.recv()
+        qRender.put(jsonString)
+
+# Block until all tasks are done
+qRender.join()
+qPlay.join()
+
+# Stop the workers
+qRender.put(None)
+qPlay.put(None)
+worker_render.join()
+worker_play.join()
+
+
+
+
+
+
+
+
+
+
+'''import queue
+import threading
+import os
+from websockets.sync.client import connect
+import json
+import winsound
+import librosa
+
+if 'TORTOISE_MODELS_DIR' not in os.environ:
+    os.environ['TORTOISE_MODELS_DIR'] = os.path.realpath(os.path.join(os.getcwd(), './models/tortoise/'))
+
+if 'TRANSFORMERS_CACHE' not in os.environ:
+    os.environ['TRANSFORMERS_CACHE'] = os.path.realpath(os.path.join(os.getcwd(), './models/transformers/'))
+
+from tortoise.utils.audio import *
+from tortoise import api_fast
+import time, io, warnings, logging
+from rvc_pipe.rvc_infer import rvc_convert
+
+logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+logging.getLogger("DeepSpeed").setLevel(logging.ERROR)
+warnings.filterwarnings('ignore')
+
+# -- Define Model
+model_name = "loona"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+tts_voice_dir = os.path.join(script_dir,"voices")
+clips_path = os.path.join(tts_voice_dir,model_name)
+tts_models_dir = os.environ['TORTOISE_MODELS_DIR']
+finetunes_dir = os.path.join(tts_models_dir,"finetunes")
+rvc_models_dir = os.path.realpath(os.path.join(os.getcwd(), './models/rvc/weights/'))
+rvc_indicies_dir = os.path.realpath(os.path.join(os.getcwd(), './models/rvc/indicies/'))
+clips = [os.path.join(script_dir,clips_path,file) for file in os.listdir(clips_path)]
+latent_file_path = os.path.join(tts_voice_dir,f"{model_name}_latents.pth")
+
+reference_clips = [load_audio(p, 22050) for p in clips]
+tts = api_fast.TextToSpeech(use_deepspeed=True,kv_cache=True,half=True,models_dir=tts_models_dir,autoregressive_model_path=os.path.join(finetunes_dir,f"{model_name}_tts.pth"))
+
+if not os.path.exists(latent_file_path):
+    cur_latents = tts.get_conditioning_latents(reference_clips)
+    torch.save(cur_latents,latent_file_path)
+    print(f"Saved 'fast' latents to {latent_file_path}")
+
+cur_latents = torch.load(latent_file_path)
+
+# Create a Queue object
+q = queue.Queue()
+
+# Define your task
+def do_task():
+    while True:
+        jsonString = q.get()
+        if jsonString is None:
+            break
+
+        # process your jsonString here
+        print("Text recieved, processing...")
+        jsonFile = json.loads(jsonString)
+        text = jsonFile["Payload"]
+        print(text)
+        start = time.time()
+        pcm_audio = tts.tts(text, conditioning_latents=cur_latents)
+        end = time.time()
+
+        time_elapsed_tts=end-start
+        print(f"Generation took: {time_elapsed_tts} seconds")
+
+        audio_tensor = pcm_audio.squeeze(0).cpu()
+    
+        container = io.BytesIO()
+        sample_rate = 24000
+        torchaudio.save(container,audio_tensor,sample_rate,format="wav")
+        container.seek(0)
+
+        selected_voice="loona"
+        selected_model=os.path.join(rvc_models_dir,selected_voice+".pth")
+        selected_index=os.path.join(rvc_indicies_dir,selected_voice+".index")
+
+        start = time.time()
+        output_audio = rvc_convert(model_path=selected_model,input_path=container,file_index=selected_index,index_rate=0.7)
+        winsound.PlaySound(output_audio, winsound.SND_FILENAME)
+
+        time_elapsed_rvc=end-start
+        print(f"RVC took {time_elapsed_rvc} seconds, audio saved to: {output_audio}")
+        print(f"Total time taken: {time_elapsed_tts+time_elapsed_rvc} seconds")
+
+        q.task_done()
+
+# Start a worker thread
+worker = threading.Thread(target=do_task)
+worker.start()
+
+while True:
+    print("Attempting to connect to the websocket...")
+    with connect("ws://localhost:8080/Messages") as websocket:
+        print("Connected!")
+        jsonString = websocket.recv()
+        q.put(jsonString)
+
+# Block until all tasks are done
+q.join()
+
+# Stop the worker
+q.put(None)
+worker.join()'''
+
+
+
+
+
+
+
+'''import os
+from websockets.sync.client import connect
+import json
+import winsound
+import librosa
+
+if 'TORTOISE_MODELS_DIR' not in os.environ:
+    os.environ['TORTOISE_MODELS_DIR'] = os.path.realpath(os.path.join(os.getcwd(), './models/tortoise/'))
+
+if 'TRANSFORMERS_CACHE' not in os.environ:
+	os.environ['TRANSFORMERS_CACHE'] = os.path.realpath(os.path.join(os.getcwd(), './models/transformers/'))
+
+from tortoise.utils.audio import *
+from tortoise import api_fast
+import time, io, warnings, logging
+from rvc_pipe.rvc_infer import rvc_convert
+
+logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+logging.getLogger("DeepSpeed").setLevel(logging.ERROR)
+warnings.filterwarnings('ignore')
+
+
+
+model_name = "loona"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+tts_voice_dir = os.path.join(script_dir,"voices")
+clips_path = os.path.join(tts_voice_dir,model_name)
+tts_models_dir = os.environ['TORTOISE_MODELS_DIR']
+finetunes_dir = os.path.join(tts_models_dir,"finetunes")
+rvc_models_dir = os.path.realpath(os.path.join(os.getcwd(), './models/rvc/weights/'))
+rvc_indicies_dir = os.path.realpath(os.path.join(os.getcwd(), './models/rvc/indicies/'))
+clips = [os.path.join(script_dir,clips_path,file) for file in os.listdir(clips_path)]
+latent_file_path = os.path.join(tts_voice_dir,f"{model_name}_latents.pth")
+
+reference_clips = [load_audio(p, 22050) for p in clips]
+tts = api_fast.TextToSpeech(use_deepspeed=True,kv_cache=True,half=True,models_dir=tts_models_dir,autoregressive_model_path=os.path.join(finetunes_dir,f"{model_name}_tts.pth"))
+
+if not os.path.exists(latent_file_path):
+    cur_latents = tts.get_conditioning_latents(reference_clips)
+    torch.save(cur_latents,latent_file_path)
+    print(f"Saved 'fast' latents to {latent_file_path}")
+
+cur_latents = torch.load(latent_file_path)
+
+while True:
+    with connect("ws://localhost:8080/Messages") as websocket:
+        jsonString = websocket.recv()
+        jsonFile = json.loads(jsonString)
+        text = jsonFile["Payload"]
+    start = time.time()
+    pcm_audio = tts.tts(text, conditioning_latents=cur_latents)
+    end = time.time()
+
+    time_elapsed_tts=end-start
+    print(f"Generation took: {time_elapsed_tts} seconds")
+
+    audio_tensor = pcm_audio.squeeze(0).cpu()
+    
+    container = io.BytesIO()
+    sample_rate = 24000
+    torchaudio.save(container,audio_tensor,sample_rate,format="wav")
+    container.seek(0)
+
+    selected_voice="loona"
+    selected_model=os.path.join(rvc_models_dir,selected_voice+".pth")
+    selected_index=os.path.join(rvc_indicies_dir,selected_voice+".index")
+
+    start = time.time()
+    output_audio = rvc_convert(model_path=selected_model,input_path=container,file_index=selected_index,index_rate=0.7)
+    winsound.PlaySound(output_audio, winsound.SND_FILENAME)
+
+    time_elapsed_rvc=end-start
+    print(f"RVC took {time_elapsed_rvc} seconds, audio saved to: {output_audio}")
+    print(f"Total time taken: {time_elapsed_tts+time_elapsed_rvc} seconds")'''
