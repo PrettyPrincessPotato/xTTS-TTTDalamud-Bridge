@@ -19,6 +19,10 @@ import select
 import time
 import warnings
 import logging
+import string
+import re
+
+debug = False  # Initialize debug as False
 
 # Set logging to INFO
 logging.basicConfig(filename='project.log', level=logging.INFO, 
@@ -36,8 +40,9 @@ url = 'http://10.10.10.47:8020/tts_to_audio/'
 # Should the script be running?
 runScript = [True]
 
-# Create a queue
-q = queue.Queue()
+# Create two queues, one for the requests and one for the audio data
+request_queue = queue.Queue()
+audio_queue = queue.Queue()
 
 def get_voice(speaker, gender=None):
     # Read each default voice and every importantVoice and assign them variables.
@@ -77,8 +82,8 @@ def process_request():
         if not runScript[0]:  # Check if the script should be running
             break  # If not, break out of the loop
         try:
-            # Get the next request from the queue
-            jsonFile = q.get(timeout=1) # Get the next request from the queue, but timeout after 1 second
+            # Get the next request from the request_queue
+            jsonFile = request_queue.get(timeout=1) # Get the next request from the queue, but timeout after 1 second
             if debug:
                 print("DEBUG: Got item from queue")
         except queue.Empty:  # If the queue is empty
@@ -111,7 +116,7 @@ def process_request():
                 resp = s.send(prepped)
                 break # If the request is successful, break out of the loop
             except requests.exceptions.RequestException as e:
-                if i < max_retries - 1: #
+                if i < max_retries - 1: 
                     logger.error(f"Request failed with error {e}. Retrying...")
                     continue  # If we haven't reached the max retries, go to the next iteration
                 else:
@@ -120,93 +125,6 @@ def process_request():
 
         # Assuming audio_data is your byte data
         audio_data = resp.content
-        pcm_data, samplerate = process_audio(io.BytesIO(audio_data))  # Process the audio
-
-
-        q.put((pcm_data, samplerate))  # Put processed (PCM data and sample rate) into queue
-
-def play_audio():
-    while True:
-        pcm_data, audio_data = q.get()  # Get next audio data from the queue
-
-        # Convert the data to PCM
-        pcm_data = np.int16(data * 32767)
-
-        # Write to a WAV file in memory
-        audio_file = io.BytesIO()
-        write(audio_file, samplerate, pcm_data)
-        audio_file.seek(0)  # reset file pointer to the beginning
-
-        # Open the audio file
-        wave_read = wave.open(audio_file, 'rb')
-
-        # Initialize PyAudio
-        p = pyaudio.PyAudio()
-
-        # Open a stream
-        stream = p.open(format=p.get_format_from_width(wave_read.getsampwidth()),
-                        channels=wave_read.getnchannels(),
-                        rate=wave_read.getframerate(),
-                        output=True)
-
-        # Play the stream
-        data = wave_read.readframes(1024)
-        while len(data) > 0:
-            # Convert byte data to numpy array
-            np_data = np.frombuffer(data, dtype=np.int16)
-            # Reduce volume
-            np_data = (np_data * 0.5).astype(np.int16)
-            # Convert numpy array back to byte data and write to stream
-            stream.write(np_data.tobytes())
-            data = wave_read.readframes(1024)
-
-        # Close the stream
-        stream.stop_stream()
-        stream.close()
-
-        # Terminate PyAudio
-        p.terminate()
-
-        # Indicate that the task is done
-        q.task_done()
-
-
-def process_request():
-    while True:
-        if not runScript[0]:  # Check if the script should be running
-            break  # If not, break out of the loop
-        try:
-            # Get the next request from the queue
-            jsonFile = q.get_nowait() # Get the next request from the queue, but timeout after 1 second
-            if debug:
-                print("DEBUG: Got item from queue")
-        except queue.Empty:  # If the queue is empty
-            continue  # Continue to the next iteration of the loop, so it can check if the script should be running again.
-
-
-        # Get the voice of the speaker.
-        if debug:
-           print("DEBUG: jsonfile[Voice]")
-           print(jsonFile["Voice"])
-        voice = get_voice(jsonFile["Speaker"], jsonFile["Voice"].get("Name"))
-        if debug:
-            print("DEBUG: voice")
-            print(voice)
-
-        # Defines data, the json input required to get audio back
-        data_dict = {"text": jsonFile["Payload"], "speaker_wav": voice, "language": "en"}
-        data = json.dumps(data_dict)
-        
-        # defines req, a POST request using URL and Data to send that information.
-        req = Request('POST', url, data=data)
-        # defines prepped, which requires the request to be prepared for some weird fuckin reason
-        prepped = req.prepare()
-
-        # defines resp, which is when we send the prepped request with Session()
-        resp = s.send(prepped)
-
-        # Assuming audio_data is your byte data
-        audio_data = resp.content 
 
         # Load the audio file
         data, samplerate = sf.read(io.BytesIO(audio_data))
@@ -214,6 +132,16 @@ def process_request():
         # Convert the data to PCM
         pcm_data = np.int16(data * 32767)
 
+        audio_queue.put((pcm_data, samplerate))  # Put processed (PCM data and sample rate) into audio_queue
+
+# Start a worker thread
+worker = threading.Thread(target=process_request)
+worker.start()
+
+def play_audio():
+    while True:
+        pcm_data, samplerate = audio_queue.get()  # Get next audio data from the queue
+
         # Write to a WAV file in memory
         audio_file = io.BytesIO()
         write(audio_file, samplerate, pcm_data)
@@ -234,8 +162,6 @@ def process_request():
         # Play the stream
         data = wave_read.readframes(1024)
         while len(data) > 0:
-            if not runScript[0]:  # Check if the script should be running
-                break  # If not, break out of the loop
             # Convert byte data to numpy array
             np_data = np.frombuffer(data, dtype=np.int16)
             # Reduce volume
@@ -252,13 +178,14 @@ def process_request():
         p.terminate()
 
         # Indicate that the task is done
-        q.task_done()
+        audio_queue.task_done()
 
-# Start a worker thread
-worker = threading.Thread(target=process_request)
-worker.start()
+# Start the play_audio function in one thread
+play_audio_thread = threading.Thread(target=play_audio)
+play_audio_thread.start()
 
-def main(q):
+
+def main():
     global debug
     while runScript[0]:
         try:
@@ -276,7 +203,7 @@ def main(q):
                         print("Got message!")
                     jsonString = websocket.recv()
                     jsonFile = json.loads(jsonString)
-                    q.put(jsonFile)
+                    request_queue.put(jsonFile)
         except Exception as e:
             if debug:
                 print(f"Failed to connect to the websocket: {e}")
@@ -330,12 +257,13 @@ warnings.filterwarnings("ignore", "process_audio is not defined")
 warnings.filterwarnings("ignore", "samplerate is not defined")
 
 # Start the main function in one thread
-main_thread = threading.Thread(target=main, args=(q,))
+main_thread = threading.Thread(target=main)
 main_thread.start()
 
 # Start the debug function in another thread
 debug_thread = threading.Thread(target=debug)
 debug_thread.start()
 
-# Wait for all tasks in the queue to be done
-q.join()
+# Wait for all tasks in the queues to be done
+request_queue.join()
+audio_queue.join()
