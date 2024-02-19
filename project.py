@@ -96,10 +96,46 @@ def process_request():
         if debug:
             print("DEBUG: Got voice")
 
+        # Get the payload from the request
+        payload = jsonFile["Payload"]
+        
+        # Split the payload into words and punctuation
+        words_and_punctuation = re.findall(r"[\w'-]+|[.,!?;]", payload)
+
+        # Create a list to store the corrected words and punctuation
+        corrected_words_and_punctuation = []
+
+        # Load the pronunciation dictionary
+        with open('dict.json', 'r') as f:
+            pronunciation_dict = json.load(f)
+                
+        # Load the funny names dictionary
+        with open('funnyNames.json', 'r') as f:
+            funny_names_dict = json.load(f)
+
+        # Iterate through the words and punctuation
+        for word_or_punctuation in words_and_punctuation:
+            # If the word is in the funny names dictionary, occasionally replace it
+            if word_or_punctuation.lower() in funny_names_dict and random.random() < 0.01:  # 1% chance
+                corrected_word_or_punctuation = funny_names_dict[word_or_punctuation.lower()]
+            # If the word or punctuation is in the pronunciation dictionary, replace it
+            elif word_or_punctuation.lower() in pronunciation_dict:
+                corrected_word_or_punctuation = pronunciation_dict[word_or_punctuation.lower()]
+            # Otherwise, keep the word or punctuation as it is
+            else:
+                corrected_word_or_punctuation = word_or_punctuation
+            # Add the corrected word or punctuation to the list
+            corrected_words_and_punctuation.append(corrected_word_or_punctuation)
+        
+        # Join the corrected words and punctuation back together
+        corrected_payload = " ".join(corrected_words_and_punctuation)
+
         # Defines data, the json input required to get audio back
         if debug:
             print("DEBUG: Creating data dict")
-        data_dict = {"text": jsonFile["Payload"], "speaker_wav": voice, "language": "en"}
+        data_dict = {"text": corrected_payload, "speaker_wav": voice, "language": "en"}
+        if debug:
+            print("DEBUG: data_dict input: ", data_dict)
         data = json.dumps(data_dict)
 
         # defines req, a POST request using URL and Data to send that information.
