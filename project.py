@@ -35,7 +35,7 @@ print("Startup successful!")
 # Stores the session as a variable so credentials are not needed to be entered every time.
 s = Session()
 # Defines URL as the TTS to audio link on Kelly's server
-url = 'http://10.10.10.47:8020/tts_to_audio/'
+url = 'https://voxbox.tigristech.org/tts_to_audio/'
 
 # Should the script be running?
 runScript = [True]
