@@ -31,6 +31,7 @@ logger=logging.getLogger(__name__)
 
 # Something pretty to look at for my monke brain
 print("Startup successful!")
+logger.info("Starting script")
 
 # Stores the session as a variable so credentials are not needed to be entered every time.
 s = Session()
@@ -150,6 +151,10 @@ def process_request():
         for i in range(max_retries):
             try:
                 resp = s.send(prepped)
+                if resp.status_code != 200:  # Check if the status code is not 200
+                    print(f"Error: Received status code {resp.status_code} from TTS server. Response content:")
+                    print(resp.content.decode())  # Print the response content
+                    raise requests.exceptions.HTTPError(f"Received status code {resp.status_code}")  # Raise an exception
                 break # If the request is successful, break out of the loop
             except requests.exceptions.RequestException as e:
                 if i < max_retries - 1: 
@@ -157,14 +162,18 @@ def process_request():
                     continue  # If we haven't reached the max retries, go to the next iteration
                 else:
                     logger.error(f"Request failed after {max_retries} attempts. Error: {e}")
-                    return  # If we've reached the max retries, return from the function
+                    continue  # If we've reached the max retries, continue to the next iteration instead of returning
 
         # Assuming audio_data is your byte data
         audio_data = resp.content
 
-        # Load the audio file
-        data, samplerate = sf.read(io.BytesIO(audio_data))
-
+        # Try to read the response as an audio file
+        try:
+            data, samplerate = sf.read(io.BytesIO(audio_data))
+        except RuntimeError:
+            print("Error: Unable to read response from TTS server as an audio file.")
+            continue  # Skip the rest of this iteration and go back to the start of the loop
+        
         # Convert the data to PCM
         pcm_data = np.int16(data * 32767)
 
