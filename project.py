@@ -45,6 +45,15 @@ url = 'https://voxbox.tigristech.org/tts_to_audio/'
 mouse_event_occurred = False
 keyboard_event_occurred = False
 
+# Function to clear a queue
+def clear_queue(q):
+    while not q.empty():
+        try:
+            q.get_nowait()  # Non-blocking get
+        except queue.Empty:
+            break  # The queue is empty
+        q.task_done()  # Indicate that the item has been processed
+
 ############################################
 # VOICE MANAGER CLASS                      #
 ############################################
@@ -130,7 +139,7 @@ class RequestProcessor:
             # Get the voice of the speaker.
             if debug:
                 print("DEBUG: Getting voice")
-            voice = self.get_voice(jsonFile["Speaker"], jsonFile["Voice"].get("Name"), jsonFile.get("Source"))
+            voice = self.voice_manager.get_voice(jsonFile["Speaker"], jsonFile["Voice"].get("Name"), jsonFile.get("Source"))
             if debug:
                 print("DEBUG: Got voice")
 
@@ -219,6 +228,7 @@ class RequestProcessor:
 
     def stop(self):
         self.runScript.set()
+        clear_queue(self.request_queue)  # Clear the request_queue
         self.worker_thread.join()
 
 ############################################
@@ -315,6 +325,7 @@ class AudioPlayer:
 
     def stop(self):
         self.runScript.set()
+        clear_queue(self.audio_queue)  # Clear the audio_queue
         self.playback_thread.join()
 
 ############################################
@@ -383,9 +394,13 @@ class EventListener:
 # DEBUGGER CLASS                           #
 ############################################
 class Debugger:
-    def __init__(self):
+    def __init__(self, voice_manager, request_processor, audio_player, websocket_client):
         self.runScript = threading.Event()
         self.debug_thread = threading.Thread(target=self.debug)
+        self.voice_manager = voice_manager
+        self.request_processor = request_processor
+        self.audio_player = audio_player
+        self.websocket_client = websocket_client
         self.debug_thread.start()
 
     def debug(self):
@@ -404,25 +419,26 @@ class Debugger:
 
             elif command == "exit":
                 print("Shutting down...")
-                self.runScript.set()
-                clear_queue(request_queue)
-                clear_queue(audio_queue)
                 if debug:
+                    print("===== Threads running: =====")
                     for thread in threading.enumerate():
                         print(thread.name)
+                    print("=============================")
                 if debug:
-                    print("Attempting to join worker thread")
-                worker.join()
+                    print("Setting runScript to false...")
+                self.runScript.set() # Set the runScript event to stop the script
                 if debug:
-                    print("Joined worker thread")
-                main_thread.join()
+                    print("Stopping voice_manager...")
+                self.voice_manager.stop()  # Stop the voice_manager thread
                 if debug:
-                    print("Joined main thread")
-                play_audio_thread.join()
+                    print("Stopping request_processor...")
+                self.request_processor.stop()  # Stop the request_processor thread
                 if debug:
-                    print("Joined play_audio thread")
+                    print("Stopping audio_player...")
+                self.audio_player.stop()  # Stop the audio_player thread
                 if debug:
-                    print("Joined debug thread")
+                    print("Stopping websocket_client...")
+                self.websocket_client.stop()  # Stop the websocket_client thread
                 break
 
             elif command == "help":
@@ -435,9 +451,9 @@ class Debugger:
                 print("===== exit =====")
                 print("exits the program.")
 
-        def stop(self):
-            self.runScript.set()
-            self.debug_thread.join()
+    def stop(self):
+        self.runScript.set()
+        self.debug_thread.join()
 
 # Initialize the queues
 request_queue = queue.Queue()
@@ -449,7 +465,7 @@ request_processor = RequestProcessor(request_queue, voice_manager)
 audio_player = AudioPlayer(audio_queue)
 websocket_client = WebSocketClient(request_queue)
 event_listener = EventListener()
-debugger = Debugger()
+debugger = Debugger(voice_manager, request_processor, audio_player, websocket_client)
 
 # Wait for all tasks in the queues to be done
 request_queue.join()
@@ -461,3 +477,4 @@ request_processor.stop()
 audio_player.stop()
 websocket_client.stop()
 debugger.stop()
+
