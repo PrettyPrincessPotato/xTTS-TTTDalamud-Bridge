@@ -487,9 +487,9 @@ audio_queue = queue.Queue()
 # Create instances of your classes
 voice_manager = VoiceManager()
 request_processor = RequestProcessor(request_queue, voice_manager)
+event_listener = EventListener()  # Start listening for events before starting the audio player
 audio_player = AudioPlayer()
 websocket_client = WebSocketClient()
-event_listener = EventListener()
 debugger = Debugger(voice_manager, request_processor, audio_player, websocket_client)
 
 # Wait for all tasks in the queues to be done
