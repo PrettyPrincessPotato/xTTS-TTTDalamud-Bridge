@@ -21,7 +21,7 @@ import pyautogui
 from pynput import mouse
 from pynput import keyboard
 
-debug = False  # Initialize debug as False
+debug = True  # Initialize debug
 
 # Set logging to INFO
 logging.basicConfig(filename='project.log', level=logging.INFO, 
@@ -224,6 +224,15 @@ def process_request():
 worker = threading.Thread(target=process_request)
 worker.start()
 
+# Clear the queue
+def clear_queue(q):
+    while not q.empty():
+        try:
+            q.get_nowait()  # Non-blocking get
+        except queue.Empty:
+            break  # The queue is empty
+        q.task_done()  # Indicate that the item has been processed
+
 # Looks for a specific device name and returns the index of that device
 def get_device_index(device_name):
     p = pyaudio.PyAudio()
@@ -240,8 +249,11 @@ def get_device_index(device_name):
 def play_audio():
     global mouse_event_occurred
     global keyboard_event_occurred
-    while True:
-        pcm_data, samplerate, jsonFile = audio_queue.get()  # Get next audio data from the queue
+    while not runScript.is_set():
+        try:
+            pcm_data, samplerate, jsonFile = audio_queue.get(timeout=1)  # Get next audio data from the queue
+        except queue.Empty:
+            continue # Continue to the next iteration of the loop, so it can check if the script should be running again.
 
         # Write to a WAV file in memory
         audio_file = io.BytesIO()
@@ -341,7 +353,6 @@ def main():
 # Define this function as the debug thread.
 def debug():
     global debug # Declare debug as a global variable at the start of the function
-    debug = False  # Initialize debug
     
     while not runScript.is_set():
         command = input("Enter a command: ")
@@ -357,6 +368,8 @@ def debug():
         elif command == "exit":
             print("Shutting down...")
             runScript.set()
+            clear_queue(request_queue)
+            clear_queue(audio_queue)
             if debug:
                 for thread in threading.enumerate():
                     print(thread.name)
@@ -368,6 +381,11 @@ def debug():
             main_thread.join()
             if debug:
                 print("Joined main thread")
+            play_audio_thread.join()
+            if debug:
+                print("Joined play_audio thread")
+            if debug:
+                print("Joined debug thread")
             break
 
         elif command == "help":
