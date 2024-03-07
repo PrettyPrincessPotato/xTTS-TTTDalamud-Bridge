@@ -10,3 +10,4 @@ __pycache__/
 *.OLD
 venv/
 test.py
+*.json
