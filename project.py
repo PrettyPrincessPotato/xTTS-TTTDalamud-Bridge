@@ -202,9 +202,12 @@ class RequestProcessor:
                         print(f"Error: Received status code {resp.status_code} from TTS server. Response content:")
                         print(resp.content.decode())  # Print the response content
                         raise requests.exceptions.HTTPError(f"Received status code {resp.status_code}")  # Raise an exception
+                    if debug:
+                        print("DEBUG: Sent request and recieved response")
                     break # If the request is successful, break out of the loop
                 except requests.exceptions.RequestException as e:
                     if i < max_retries - 1: 
+                        print(f"Request failed with error {e}. Retrying...")
                         logger.error(f"Request failed with error {e}. Retrying...")
                         continue  # If we haven't reached the max retries, go to the next iteration
                     else:
@@ -213,18 +216,26 @@ class RequestProcessor:
 
             # Assuming audio_data is your byte data
             audio_data = resp.content
+            #if debug:
+                #print("DEBUG: audio_data: ", audio_data)
 
             # Try to read the response as an audio file
             try:
                 data, samplerate = sf.read(io.BytesIO(audio_data))
+                if debug:
+                    print("DEBUG: Read response from TTS server as an audio file")
             except RuntimeError:
                 print("Error: Unable to read response from TTS server as an audio file.")
                 continue  # Skip the rest of this iteration and go back to the start of the loop
             
             # Convert the data to PCM
             pcm_data = np.int16(data * 32767)
+            if debug:
+                print ("DEBUG: pcm_data: ", pcm_data)
 
             audio_queue.put((pcm_data, samplerate, jsonFile))  # Put processed (PCM data and sample rate) into audio_queue
+            if debug:
+                print("DEBUG: Put item in queue")
 
     def stop(self):
         self.runScript.set()
@@ -240,7 +251,15 @@ class AudioPlayer:
         self.audio_queue = queue.Queue()
         self.runScript = threading.Event()
         self.playback_thread = threading.Thread(target=self.play_audio)
-        self.playback_thread.start()
+        self.playback_thread = threading.Thread(target=self.play_audio)
+        try:
+            self.playback_thread.start()
+            print("DEBUG: playback_thread.is_alive(): ", self.playback_thread.is_alive())
+        except Exception as e:
+            print(f"DEBUG: Exception in AudioPlayer __init__ method: {e}")
+        if debug:
+            print("DEBUG: Initializing AudioPlayer")
+            print("DEBUG: runScript.is_set(): ", self.runScript.is_set())
 
     # Looks for a specific device name and returns the index of that device
     def get_device_index(self, device_name):
@@ -252,11 +271,15 @@ class AudioPlayer:
         raise ValueError(f"No device with name {device_name} found")
 
     def play_audio(self):
+        if debug:
+            print("DEBUG: Entering play_audio function")
         global mouse_event_occurred
         global keyboard_event_occurred
         while not self.runScript.is_set():
             try:
                 pcm_data, samplerate, jsonFile = self.audio_queue.get(timeout=1)  # Get next audio data from the queue
+                if debug:
+                    print("DEBUG: Got item from queue")
             except queue.Empty:
                 continue # Continue to the next iteration of the loop, so it can check if the script should be running again.
 
@@ -324,6 +347,8 @@ class AudioPlayer:
             self.audio_queue.task_done()
 
     def stop(self):
+        if debug:
+            print("DEBUG: Stopping AudioPlayer")
         self.runScript.set()
         clear_queue(self.audio_queue)  # Clear the audio_queue
         self.playback_thread.join()
@@ -462,8 +487,8 @@ audio_queue = queue.Queue()
 # Create instances of your classes
 voice_manager = VoiceManager()
 request_processor = RequestProcessor(request_queue, voice_manager)
-audio_player = AudioPlayer(audio_queue)
-websocket_client = WebSocketClient(request_queue)
+audio_player = AudioPlayer()
+websocket_client = WebSocketClient()
 event_listener = EventListener()
 debugger = Debugger(voice_manager, request_processor, audio_player, websocket_client)
 
