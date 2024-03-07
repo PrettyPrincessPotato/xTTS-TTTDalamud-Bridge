@@ -72,7 +72,7 @@ keyboard_listener = keyboard.Listener(on_press=on_key_press)
 keyboard_listener.start()
 
 
-
+# TEST
 ############################################
 # ASSIGN THE VOICE TO WHOMEVER IS TALKING  #
 ############################################
