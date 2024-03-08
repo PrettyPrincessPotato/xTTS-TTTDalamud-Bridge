@@ -131,7 +131,7 @@ class RequestProcessor:
                 # Get the next request from the request_queue
                 jsonFile = self.request_queue.get(timeout=1) # Get the next request from the queue, but timeout after 1 second
                 if debug:
-                    print("DEBUG: Got item from queue")
+                    print("DEBUG: PROCESS_REQUESTS - Got item from queue")
                     print("DEBUG: jsonFile: ", jsonFile)
             except queue.Empty:  # If the queue is empty
                 continue  # Continue to the next iteration of the loop, so it can check if the script should be running again.
@@ -188,15 +188,19 @@ class RequestProcessor:
 
             # defines req, a POST request using URL and Data to send that information.
             if debug:
-                print("DEBUG: Creating request")
+                print("DEBUG: Creating request...")
             req = Request('POST', url, data=data)
             # defines prepped, which requires the request to be prepared for some weird fuckin reason
             prepped = req.prepare()
+            if debug:
+                print("DEBUG: Prepped response defined...")
 
             # defines resp, which is when we send the prepped request with Session()
             max_retries = 1
             for i in range(max_retries):
                 try:
+                    if debug:
+                        print("DEBUG: Attempting to send prepped reponse...")
                     resp = s.send(prepped)
                     if resp.status_code != 200:  # Check if the status code is not 200
                         print(f"Error: Received status code {resp.status_code} from TTS server. Response content:")
@@ -236,6 +240,7 @@ class RequestProcessor:
             audio_queue.put((pcm_data, samplerate, jsonFile))  # Put processed (PCM data and sample rate) into audio_queue
             if debug:
                 print("DEBUG: Put item in queue")
+                print("DEBUG: AudioQueue check:", audio_queue)
 
     def stop(self):
         self.runScript.set()
@@ -250,7 +255,8 @@ class AudioPlayer:
         # Initialize audio queue and playback thread
         self.audio_queue = queue.Queue()
         self.runScript = threading.Event()
-        self.playback_thread = threading.Thread(target=self.play_audio)
+        if debug:
+            print("DEBUG: AudioPlayer is running...")
         self.playback_thread = threading.Thread(target=self.play_audio)
         try:
             self.playback_thread.start()
@@ -259,46 +265,65 @@ class AudioPlayer:
             print(f"DEBUG: Exception in AudioPlayer __init__ method: {e}")
         if debug:
             print("DEBUG: Initializing AudioPlayer")
-            print("DEBUG: runScript.is_set(): ", self.runScript.is_set())
+            print("DEBUG: AudioPlayer: runScript.is_set(): ", self.runScript.is_set())
 
     # Looks for a specific device name and returns the index of that device
     def get_device_index(self, device_name):
         p = pyaudio.PyAudio()
+        print("DEBUG: Entering get_device_index function")
         for i in range(p.get_device_count()):
             info = p.get_device_info_by_index(i)
+            if debug:
+                print("DEBUG: device name and index: ", info["name"], info["index"])
             if device_name in info["name"]:
+                if debug:
+                    print (f"DEBUG: Found device with name {device_name} at index {info['index']}")
                 return info["index"]
         raise ValueError(f"No device with name {device_name} found")
 
     def play_audio(self):
-        if debug:
-            print("DEBUG: Entering play_audio function")
         global mouse_event_occurred
         global keyboard_event_occurred
         while not self.runScript.is_set():
+            if debug:
+                print("DEBUG: PLAY_AUDIO: runScript.is_set(): ", self.runScript.is_set())
             try:
+                if debug:
+                    print("DEBUG: PLAY AUDIO - Trying to get item from queue")
                 pcm_data, samplerate, jsonFile = self.audio_queue.get(timeout=1)  # Get next audio data from the queue
                 if debug:
-                    print("DEBUG: Got item from queue")
+                    print("DEBUG: PLAY AUDIO - Got item from queue")
+                    print("DEBUG: AudioQueue check:", self.audio_queue)
+                    print("DEBUG: pcm_data, samplerate, jsonFile: ", pcm_data, samplerate, jsonFile)
             except queue.Empty:
                 continue # Continue to the next iteration of the loop, so it can check if the script should be running again.
 
             # Write to a WAV file in memory
+            if debug:
+                print("DEBUG: Writing to a WAV file in memory")
             audio_file = io.BytesIO()
             write(audio_file, samplerate, pcm_data)
             audio_file.seek(0)  # reset file pointer to the beginning
 
             # Open the audio file
+            if debug:
+                print("DEBUG: Opening the audio file")
             wave_read = wave.open(audio_file, 'rb')
 
             # Initialize PyAudio
+            if debug:
+                print("DEBUG: Initializing PyAudio")
             p = pyaudio.PyAudio()
 
             # Get the indices of your desired output devices
+            if debug:
+                print("DEBUG: Getting device indices")
             speaker_output_index = self.get_device_index("Speakers (High Definition Audio")
             cable_output_index = self.get_device_index("CABLE Input (VB-Audio Virtual C")
 
             # Open a stream for the speakers
+            if debug:
+                print("DEBUG: Opening a stream for the speakers")
             speaker_stream = p.open(format=p.get_format_from_width(wave_read.getsampwidth()),
                                     channels=wave_read.getnchannels(),
                                     rate=wave_read.getframerate(),
@@ -313,6 +338,8 @@ class AudioPlayer:
                                 output_device_index=cable_output_index)  # Use the index of the virtual cable
 
             # Play the stream
+            if debug:
+                print("DEBUG: Playing the stream")
             data = wave_read.readframes(1024)
             while len(data) > 0:
                 # Convert byte data to numpy array
@@ -325,18 +352,24 @@ class AudioPlayer:
                 data = wave_read.readframes(1024)
 
             # Close the streams
+            if debug:
+                print("DEBUG: Closing the streams")
             speaker_stream.stop_stream()
             speaker_stream.close()
             cable_stream.stop_stream()
             cable_stream.close()
 
             # Terminate PyAudio
+            if debug:
+                print("DEBUG: Terminating PyAudio")
             p.terminate()
 
             # Simulate a mouse click to progress the message in FF14
             if jsonFile.get('Source') == 'AddonTalk':
                 cooldownTime = 3
                 if time.time() - mouse_event_occurred > cooldownTime and time.time() - keyboard_event_occurred > cooldownTime:
+                    if debug:
+                        print("DEBUG: clicking mouse...")
                     pyautogui.click(901, 222)  # random point in main monitor between my 2 monitors, your mileage may vary
 
                 # Reset the flags
@@ -375,12 +408,18 @@ class WebSocketClient:
                 while not self.runScript.is_set():
                     if debug:
                         print("Waiting for message...")
+                        print("DEBUG: REQUEST QUEUE:")
+                        print(request_queue.qsize(), request_queue.queue)
+                        print("DEBUG: AUDIO QUEUE:")
+                        print(audio_queue.qsize(), audio_queue.queue)
                     ready_to_read, _, _ = select.select([self.websocket.sock], [], [], 1)
                     if ready_to_read:
                         if debug:
                             print("Got message!")
                         jsonString = self.websocket.recv()
                         jsonFile = json.loads(jsonString)
+                        if debug:
+                            print(f"DEBUG: Received message: {jsonFile}")
                         request_queue.put(jsonFile)
             except Exception as e:
                 if debug:
