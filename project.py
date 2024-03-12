@@ -18,8 +18,13 @@ import warnings
 import logging
 import re
 import pyautogui
+import os
 from pynput import mouse
 from pynput import keyboard
+from inflect import engine
+
+# Create an inflect engine, which is used to pluralize words.
+inflect_engine = engine()
 
 debug = True  # Initialize debug
 
@@ -47,8 +52,17 @@ mouse_event_occurred = False
 keyboard_event_occurred = False
 
 # Create two queues, one for the requests and one for the audio data
-request_queue = queue.Queue()
+request_queue = None
 audio_queue = queue.Queue()
+
+# Set the request_queue to the queue passed in, or create a new queue if none is passed in.
+# This function is used to set the request_queue from the test script
+def set_request_queue(q):
+    global request_queue
+    request_queue = q
+
+if request_queue is None:
+    request_queue = queue.Queue()
 
 # Define the mouse and keyboard listeners
 def on_move(x, y):
@@ -114,6 +128,41 @@ def get_voice(speaker, gender=None, source=None):
     
     return voice
 
+# Function to symbols and emoticons
+def replace_symbols_and_emoticons(text):
+    # Load the symbols and emoticons from the JSON file
+    with open('symbolsAndEmotes.json', 'r') as f:
+        symbolsAndEmotesJson = json.load(f)
+
+    # Replace each symbol or emoticon in the text
+    for symbol, replacement in symbolsAndEmotesJson.items():
+        text = text.replace(symbol, replacement)
+
+    return text
+
+# Function to check if a string is a valid Roman numeral
+def is_roman_numeral(s):
+    roman_numerals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+    last_value = 0
+    for char in s:
+        value = roman_numerals.get(char, 0)
+        if value > last_value:
+            # If a larger numeral appears before a smaller one, it's not a valid Roman numeral
+            return False
+        last_value = value
+    return True
+
+# Function to translate roman numerals to arabic numerals
+def roman_to_int(s):
+    roman_numerals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+    integer = 0
+    for i in range(len(s)):
+        if i > 0 and roman_numerals[s[i]] > roman_numerals[s[i - 1]]:
+            integer += roman_numerals[s[i]] - 2 * roman_numerals[s[i - 1]]
+        else:
+            integer += roman_numerals[s[i]]
+    return integer
+
 ############################################
 # PROCESS THE REQUESTS AND SEND TO SERVER  #
 ############################################
@@ -139,9 +188,12 @@ def process_request():
 
         # Get the payload from the request
         payload = jsonFile["Payload"]
+
+        # Replace symbols and emoticons
+        payload = replace_symbols_and_emoticons(payload)
         
         # Split the payload into words and punctuation
-        words_and_punctuation = re.findall(r"[\w'-]+|[.,!?;]", payload)
+        words_and_punctuation = re.findall(r"[\w'-]+|[.,!?;:-]", payload)
 
         # Create a list to store the corrected words and punctuation
         corrected_words_and_punctuation = []
@@ -153,24 +205,59 @@ def process_request():
         # Load the funny names dictionary
         with open('funnyNames.json', 'r') as f:
             funny_names_dict = json.load(f)
+        if debug:
+            print("DEBUG: lol exists in funny_names_dict: ")
+            print('lol' in funny_names_dict)
 
         # Iterate through the words and punctuation
         for word_or_punctuation in words_and_punctuation:
+            if debug:
+                print("DEBUG: Word being checked: ")
+                print(word_or_punctuation)
+            corrected = False  # Flag to check if the word has been corrected
+            # If the word is a Roman numeral, convert it to an Arabic number
+            if len(word_or_punctuation) > 1 and set(word_or_punctuation.upper()).issubset(set('IVXLCDM')) and is_roman_numeral(word_or_punctuation.upper()):
+                try:
+                    arabic_number = roman_to_int(word_or_punctuation.upper())
+                    corrected_word_or_punctuation = str(arabic_number)
+                    corrected = True  # Update the flag
+                    if debug:
+                        print("DEBUG: Converted Roman numeral to Arabic number: ")
+                        print(corrected_word_or_punctuation)
+                except KeyError:
+                    corrected_word_or_punctuation = word_or_punctuation
+                    if debug:
+                        print("DEBUG: Unable to convert Roman numeral to Arabic number: ")
+                        print(corrected_word_or_punctuation)
             # If the word is in the funny names dictionary, occasionally replace it
-            if word_or_punctuation.lower() in funny_names_dict and random.random() < 0.01:  # 1% chance
-            #if word_or_punctuation.lower() in funny_names_dict:  # Always replace it for testing
-                corrected_word_or_punctuation = funny_names_dict[word_or_punctuation.lower()]
-            # If the word or punctuation is in the pronunciation dictionary, replace it
-            elif word_or_punctuation.lower() in pronunciation_dict:
+            if debug:
+                print("DEBUG: Corrected? - Before random chance for funny_names_dict:")
+                print(corrected)
+            if not corrected and random.random() < 0.01:  # 1% chance
+                if word_or_punctuation.lower() in funny_names_dict:
+                    # Randomly select a replacement from the list
+                    corrected_word_or_punctuation = random.choice(funny_names_dict[word_or_punctuation.lower()])
+                    corrected = True  # Update the flag
+                elif word_or_punctuation.lower().endswith('s') and word_or_punctuation.lower()[:-1] in funny_names_dict:
+                    # Randomly select a replacement from the list and pluralize it
+                    corrected_word_or_punctuation = inflect_engine.plural(random.choice(funny_names_dict[word_or_punctuation.lower()[:-1]]))
+                    corrected = True  # Update the flag
+                        # If the word or punctuation is in the pronunciation dictionary, replace it
+            if not corrected and word_or_punctuation.lower() in pronunciation_dict:
                 corrected_word_or_punctuation = pronunciation_dict[word_or_punctuation.lower()]
+                corrected = True  # Update the flag
             # Otherwise, keep the word or punctuation as it is
-            else:
+            if not corrected:
                 corrected_word_or_punctuation = word_or_punctuation
             # Add the corrected word or punctuation to the list
             corrected_words_and_punctuation.append(corrected_word_or_punctuation)
-        
         # Join the corrected words and punctuation back together
         corrected_payload = " ".join(corrected_words_and_punctuation)
+        # Remove spaces before punctuation
+        corrected_payload = corrected_payload.replace(" ,", ",").replace(" .", ".").replace(" !", "!").replace(" ?", "?").replace(" ;", ";").replace(" :", ":").replace(" -", "-")  
+        if debug:
+            print("DEBUG: Corrected payload: ")
+            print(corrected_payload)
 
         # Defines data, the json input required to get audio back
         if debug:
@@ -307,9 +394,9 @@ def play_audio():
 
         # Simulate a mouse click to progress the message in FF14
         if jsonFile.get('Source') == 'AddonTalk':
-            cooldownTime = 3
+            cooldownTime = 4  # Cooldown time in seconds
             if time.time() - mouse_event_occurred > cooldownTime and time.time() - keyboard_event_occurred > cooldownTime:
-                pyautogui.click(901, 222)  # random point in main monitor between my 2 monitors, your mileage may vary
+                pyautogui.click(680, 1041)  # random point in main monitor between my 2 monitors, your mileage may vary
 
             # Reset the flags
             mouse_event_occurred = False
@@ -327,27 +414,28 @@ play_audio_thread.start()
 ############################################
 def main():
     global debug
-    while not runScript.is_set():
-        try:
-            if debug:
-                print("Attempting to connect to the websocket...")
-            websocket = create_connection("ws://localhost:8080/Messages")
-            if debug:
-                print("Connected!")
-            while not runScript.is_set():
+    if os.getenv('TEST_MODE') != 'true':  # Check if the script is not running in test mode
+        while not runScript.is_set():
+            try:
                 if debug:
-                    print("Waiting for message...")
-                ready_to_read, _, _ = select.select([websocket.sock], [], [], 1)
-                if ready_to_read:
+                    print("Attempting to connect to the websocket...")
+                websocket = create_connection("ws://localhost:8080/Messages")
+                if debug:
+                    print("Connected!")
+                while not runScript.is_set():
                     if debug:
-                        print("Got message!")
-                    jsonString = websocket.recv()
-                    jsonFile = json.loads(jsonString)
-                    request_queue.put(jsonFile)
-        except Exception as e:
-            if debug:
-                print(f"Failed to connect to the websocket: {e}")
-            time.sleep(1)  # Wait for a second before retrying
+                        print("Waiting for message...")
+                    ready_to_read, _, _ = select.select([websocket.sock], [], [], 1)
+                    if ready_to_read:
+                        if debug:
+                            print("Got message!")
+                        jsonString = websocket.recv()
+                        jsonFile = json.loads(jsonString)
+                        request_queue.put(jsonFile)
+            except Exception as e:
+                if debug:
+                    print(f"Failed to connect to the websocket: {e}")
+                time.sleep(1)  # Wait for a second before retrying
 
 
 # Define this function as the debug thread.
