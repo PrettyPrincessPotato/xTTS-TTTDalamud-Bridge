@@ -1,17 +1,14 @@
 # IMPORTS
 import json
-from requests import Request, Session
 import requests
 import pyaudio
 import wave
 import io
-import soundfile as sf
-import numpy as np
-from scipy.io.wavfile import write
+import sys
+import os
 import threading
 import queue
 import random
-from websocket import create_connection
 import select
 import time
 import warnings
@@ -19,19 +16,32 @@ import logging
 import re
 import pyautogui
 import os
+import soundfile as sf
+import numpy as np
 from pynput import mouse
 from pynput import keyboard
 from inflect import engine
+from requests import Request, Session
+from websocket import create_connection
+from scipy.io.wavfile import write
 
 # Create an inflect engine, which is used to pluralize words.
 inflect_engine = engine()
 
 debug = True  # Initialize debug
 
-# Set logging to INFO
-logging.basicConfig(filename='project.log', level=logging.INFO, 
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
-logger=logging.getLogger(__name__)
+# Create a logger
+logger = logging.getLogger(__name__)
+# Sets up the logger to output to the console if in test mode, or to a file if not.
+# Also sets the logging level to DEBUG if in test mode, or to INFO if not.
+if os.getenv('TEST_MODE') == 'true':
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, 
+                        format='%(asctime)s %(levelname)s %(name)s %(message)s')
+else:
+    logging.basicConfig(filename='project.log', level=logging.INFO, 
+                        format='%(asctime)s %(levelname)s %(name)s %(message)s')
+
+
 
 # Something pretty to look at for my monke brain
 print("Startup successful!")
@@ -142,19 +152,13 @@ def replace_symbols_and_emoticons(text):
 
 # Function to check if a string is a valid Roman numeral
 def is_roman_numeral(s):
-    roman_numerals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
-    last_value = 0
-    for char in s:
-        value = roman_numerals.get(char, 0)
-        if value > last_value:
-            # If a larger numeral appears before a smaller one, it's not a valid Roman numeral
-            return False
-        last_value = value
-    return True
+    # Regular expression pattern for a valid Roman numeral (lowercase)
+    pattern = '^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$'
+    return bool(re.match(pattern, s))  # No conversion to uppercase
 
-# Function to translate roman numerals to arabic numerals
+# Function to translate Roman numerals to Arabic numerals
 def roman_to_int(s):
-    roman_numerals = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+    roman_numerals = {'i': 1, 'v': 5, 'x': 10, 'l': 50, 'c': 100, 'd': 500, 'm': 1000}
     integer = 0
     for i in range(len(s)):
         if i > 0 and roman_numerals[s[i]] > roman_numerals[s[i - 1]]:
@@ -163,57 +167,78 @@ def roman_to_int(s):
             integer += roman_numerals[s[i]]
     return integer
 
+# Function to process a string and convert valid Roman numerals
+def convert_roman_numerals_to_arabic(text):
+    words = text.split()
+    logger.debug("DEBUG: converting roman numerals to arabic. ")
+    processed_words = []
+    for word in words:
+        if is_roman_numeral(word):
+            arabic_numeral = roman_to_int(word)
+            processed_words.append(str(arabic_numeral))
+        else:
+            processed_words.append(word)
+    return ' '.join(processed_words)
+
 ############################################
 # PROCESS THE REQUESTS AND SEND TO SERVER  #
 ############################################
 def process_request():
-    while not runScript.is_set():
-        if debug:
-            print("DEBUG: Entered process_request function")
+    while not runScript.is_set():            
         try:
             # Get the next request from the request_queue
             jsonFile = request_queue.get(timeout=1) # Get the next request from the queue, but timeout after 1 second
-            if debug:
-                print("DEBUG: Got item from queue")
-                print("DEBUG: jsonFile: ", jsonFile)
+            logger.debug("DEBUG: Got item from queue")
+            logger.debug("DEBUG: jsonFile: ", jsonFile)
         except queue.Empty:  # If the queue is empty
             continue  # Continue to the next iteration of the loop, so it can check if the script should be running again.
 
         # Get the voice of the speaker.
-        if debug:
-            print("DEBUG: Getting voice")
+        logger.debug("DEBUG: Getting voice")
         voice = get_voice(jsonFile["Speaker"], jsonFile["Voice"].get("Name"), jsonFile.get("Source"))
-        if debug:
-            print("DEBUG: Got voice")
+        logger.debug("DEBUG: Got voice: ", voice)
 
         # Get the payload from the request
         payload = jsonFile["Payload"]
+        logger.debug("DEBUG: Payload assigned from jsonFile. Payload:")
+        logger.debug(payload)
 
-        # Replace symbols and emoticons
-        payload = replace_symbols_and_emoticons(payload)
+        # Replace roman numerals to arabic
+        payload = convert_roman_numerals_to_arabic(payload)
+        logger.debug("DEBUG: Converted Roman numerals to Arabic numerals. Payload:")
+        logger.debug(payload)
         
+        # replace symbols and emotes
+        payload = replace_symbols_and_emoticons(payload)
+        logger.debug("DEBUG: Replaced symbols and emoticons to be phonetic. Payload: ")
+        logger.debug(payload)
+
         # Split the payload into words and punctuation
         words_and_punctuation = re.findall(r"[\w'-]+|[.,!?;:-]", payload)
+        logger.debug("DEBUG: Split payload into words and punctuation: ")
+        logger.debug(words_and_punctuation)
 
         # Create a list to store the corrected words and punctuation
         corrected_words_and_punctuation = []
+        logger.debug("DEBUG: Created list to store corrected words and punctuation")
+        logger.debug(corrected_words_and_punctuation)
 
         # Load the pronunciation dictionary
         with open('dict.json', 'r') as f:
             pronunciation_dict = json.load(f)
+            logger.debug("DEBUG: Loaded pronunciation dictionary")
+            logger.debug(pronunciation_dict)
                 
         # Load the funny names dictionary
         with open('funnyNames.json', 'r') as f:
             funny_names_dict = json.load(f)
-        if debug:
-            print("DEBUG: lol exists in funny_names_dict: ")
-            print('lol' in funny_names_dict)
+            logger.debug("DEBUG: Loaded funny names dictionary")
+            logger.debug(funny_names_dict)
 
         # Iterate through the words and punctuation
         for word_or_punctuation in words_and_punctuation:
-            if debug:
-                print("DEBUG: Word being checked: ")
-                print(word_or_punctuation)
+            logger.debug("DEBUG: Word being checked: ")
+            logger.debug(word_or_punctuation)
             corrected = False  # Flag to check if the word has been corrected
             # If the word is a Roman numeral, convert it to an Arabic number
             if len(word_or_punctuation) > 1 and set(word_or_punctuation.upper()).issubset(set('IVXLCDM')) and is_roman_numeral(word_or_punctuation.upper()):
@@ -221,19 +246,20 @@ def process_request():
                     arabic_number = roman_to_int(word_or_punctuation.upper())
                     corrected_word_or_punctuation = str(arabic_number)
                     corrected = True  # Update the flag
-                    if debug:
-                        print("DEBUG: Converted Roman numeral to Arabic number: ")
-                        print(corrected_word_or_punctuation)
+                    logger.debug("DEBUG: Converted Roman numeral to Arabic number: ")
+                    logger.debug(corrected_word_or_punctuation)
+                    logger.debug("DEBUG: corrected =", corrected)
                 except KeyError:
                     corrected_word_or_punctuation = word_or_punctuation
-                    if debug:
-                        print("DEBUG: Unable to convert Roman numeral to Arabic number: ")
-                        print(corrected_word_or_punctuation)
+                    logger.debug("DEBUG: Unable to convert Roman numeral to Arabic number: ")
+                    logger.debug(corrected_word_or_punctuation)
             # If the word is in the funny names dictionary, occasionally replace it
-            if debug:
-                print("DEBUG: Corrected? - Before random chance for funny_names_dict:")
-                print(corrected)
+            logger.debug("DEBUG: Corrected? - Before random chance for funny_names_dict:")
+            logger.debug(corrected)
             if not corrected and random.random() < 0.01:  # 1% chance
+                logger.debug("DEBUG: Congrats! You got the 1 percent chance for funny_names_dict!")
+                logger.debug("DEBUG: Any more debugging is irrelivant for now, as the word being replaced is so hilariously different you would know if it worked.")
+                logger.debug("DEBUG: this is an issue for later tater.")
                 if word_or_punctuation.lower() in funny_names_dict:
                     # Randomly select a replacement from the list
                     corrected_word_or_punctuation = random.choice(funny_names_dict[word_or_punctuation.lower()])
@@ -255,21 +281,17 @@ def process_request():
         corrected_payload = " ".join(corrected_words_and_punctuation)
         # Remove spaces before punctuation
         corrected_payload = corrected_payload.replace(" ,", ",").replace(" .", ".").replace(" !", "!").replace(" ?", "?").replace(" ;", ";").replace(" :", ":").replace(" -", "-")  
-        if debug:
-            print("DEBUG: Corrected payload: ")
-            print(corrected_payload)
+        logger.debug("DEBUG: Corrected payload: ")
+        logger.debug(corrected_payload)
 
         # Defines data, the json input required to get audio back
-        if debug:
-            print("DEBUG: Creating data dict")
+        logger.debug("DEBUG: Creating data dict")
         data_dict = {"text": corrected_payload, "speaker_wav": voice, "language": "en"}
-        if debug:
-            print("DEBUG: data_dict input: ", data_dict)
+        logger.debug("DEBUG: data_dict input: ", data_dict)
         data = json.dumps(data_dict)
 
         # defines req, a POST request using URL and Data to send that information.
-        if debug:
-            print("DEBUG: Creating request")
+        logger.debug("DEBUG: Creating request")
         req = Request('POST', url, data=data)
         # defines prepped, which requires the request to be prepared for some weird fuckin reason
         prepped = req.prepare()
@@ -280,8 +302,8 @@ def process_request():
             try:
                 resp = s.send(prepped)
                 if resp.status_code != 200:  # Check if the status code is not 200
-                    print(f"Error: Received status code {resp.status_code} from TTS server. Response content:")
-                    print(resp.content.decode())  # Print the response content
+                    logger.error(f"Error: Received status code {resp.status_code} from TTS server. Response content:")
+                    logger.error(resp.content.decode())  # Print the response content
                     raise requests.exceptions.HTTPError(f"Received status code {resp.status_code}")  # Raise an exception
                 break # If the request is successful, break out of the loop
             except requests.exceptions.RequestException as e:
