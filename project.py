@@ -203,10 +203,10 @@ def process_request():
         logger.debug("DEBUG: Payload assigned from jsonFile. Payload:")
         logger.debug(payload)
 
-        # Replace roman numerals to arabic
+        '''# Replace roman numerals to arabic --- TEMPORARILY DISABLED BECAUSE THIS SHIT DON'T WORK, YO
         payload = convert_roman_numerals_to_arabic(payload)
         logger.debug("DEBUG: Converted Roman numerals to Arabic numerals. Payload:")
-        logger.debug(payload)
+        logger.debug(payload)'''
         
         # replace symbols and emotes
         payload = replace_symbols_and_emoticons(payload)
