@@ -38,7 +38,6 @@ inflect_engine = engine()
 # TODO: eventually remove this old code
 debug = True  # Initialize debug
 
-
 # Function to set up JSON paths, this is so test.py can run while in another folder.
 def setup_json_paths():
     global DICT_JSON_PATH, FEMALE_VOICES_JSON_PATH, FUNNY_NAMES_JSON_PATH, IMPORTANT_VOICES_JSON_PATH, MALE_VOICES_JSON_PATH, SYMBOLS_AND_EMOTES_JSON_PATH
