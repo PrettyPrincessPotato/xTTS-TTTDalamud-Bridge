@@ -1,12 +1,14 @@
 '''
 TODO:
     Reorganize files to modulate and organize the project
-    update requirements.txt it's super out of date by now.
+    Add a way to pause the audio
+    Fix the 1% chance for funny names, currently it does a 1% roll per word, it needs to check if the word is in the dictionary first and then do a 1% roll
 '''
 
 # IMPORTS
 import json
 import requests
+import roman
 import pyaudio
 import wave
 import io
@@ -178,35 +180,24 @@ def replace_symbols_and_emoticons(text):
 
     return text
 
-# Function to check if a string is a valid Roman numeral
-def is_roman_numeral(s):
-    # Regular expression pattern for a valid Roman numeral (lowercase)
-    pattern = '^m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})$'
-    return bool(re.match(pattern, s))  # No conversion to uppercase
-
-# Function to translate Roman numerals to Arabic numerals
-def roman_to_int(s):
-    roman_numerals = {'i': 1, 'v': 5, 'x': 10, 'l': 50, 'c': 100, 'd': 500, 'm': 1000}
-    integer = 0
-    for i in range(len(s)):
-        if i > 0 and roman_numerals[s[i]] > roman_numerals[s[i - 1]]:
-            integer += roman_numerals[s[i]] - 2 * roman_numerals[s[i - 1]]
-        else:
-            integer += roman_numerals[s[i]]
-    return integer
-
-# Function to process a string and convert valid Roman numerals
-def convert_roman_numerals_to_arabic(text):
-    words = text.split()
-    logger.debug("DEBUG: converting roman numerals to arabic. ")
+def convert_roman_numerals_to_arabic(words_and_punctuation):
     processed_words = []
-    for word in words:
-        if is_roman_numeral(word):
-            arabic_numeral = roman_to_int(word)
-            processed_words.append(str(arabic_numeral))
-        else:
+    for word in words_and_punctuation:
+        logger.debug(f"DEBUG: in convert_roman_numerals_to_arabic - Word being checked: {word}")
+        if word.lower() == 'i':
+            # If the word is 'I' or 'i', keep it as it is
             processed_words.append(word)
-    return ' '.join(processed_words)
+        else:
+            try:
+                # Try to convert the word from a Roman numeral to an Arabic numeral
+                arabic_numeral = roman.fromRoman(word.upper())
+                logger.debug(f"DEBUG: in convert_roman_numerals_to_arabic - Converted Roman numeral to Arabic numeral: {arabic_numeral}")
+                processed_words.append(str(arabic_numeral))
+            except:
+                # If the word is not a valid Roman numeral, keep it as it is
+                logger.debug(f"DEBUG: in convert_roman_numerals_to_arabic - {word} is not a valid Roman numeral")
+                processed_words.append(word)
+    return processed_words
 
 ############################################
 # PROCESS THE REQUESTS AND SEND TO SERVER  #
@@ -230,11 +221,6 @@ def process_request():
         payload = jsonFile["Payload"]
         logger.debug("DEBUG: Payload assigned from jsonFile. Payload:")
         logger.debug(payload)
-
-        '''# Replace roman numerals to arabic --- TEMPORARILY DISABLED BECAUSE THIS SHIT DON'T WORK, YO
-        payload = convert_roman_numerals_to_arabic(payload)
-        logger.debug("DEBUG: Converted Roman numerals to Arabic numerals. Payload:")
-        logger.debug(payload)'''
         
         # replace symbols and emotes
         payload = replace_symbols_and_emoticons(payload)
@@ -244,6 +230,11 @@ def process_request():
         # Split the payload into words and punctuation
         words_and_punctuation = re.findall(r"[\w'-]+|[.,!?;:-]", payload)
         logger.debug("DEBUG: Split payload into words and punctuation: ")
+        logger.debug(words_and_punctuation)
+
+        # Replace roman numerals to arabic
+        words_and_punctuation = convert_roman_numerals_to_arabic(words_and_punctuation)
+        logger.debug("DEBUG: Converted Roman numerals to Arabic numerals. words_and_punctuation:")
         logger.debug(words_and_punctuation)
 
         # Create a list to store the corrected words and punctuation
@@ -268,19 +259,6 @@ def process_request():
             logger.debug("DEBUG: Word being checked: ")
             logger.debug(word_or_punctuation)
             corrected = False  # Flag to check if the word has been corrected
-            # If the word is a Roman numeral, convert it to an Arabic number
-            if len(word_or_punctuation) > 1 and set(word_or_punctuation.upper()).issubset(set('IVXLCDM')) and is_roman_numeral(word_or_punctuation.upper()):
-                try:
-                    arabic_number = roman_to_int(word_or_punctuation.upper())
-                    corrected_word_or_punctuation = str(arabic_number)
-                    corrected = True  # Update the flag
-                    logger.debug("DEBUG: Converted Roman numeral to Arabic number: ")
-                    logger.debug(corrected_word_or_punctuation)
-                    logger.debug("DEBUG: corrected =", corrected)
-                except KeyError:
-                    corrected_word_or_punctuation = word_or_punctuation
-                    logger.debug("DEBUG: Unable to convert Roman numeral to Arabic number: ")
-                    logger.debug(corrected_word_or_punctuation)
             # If the word is in the funny names dictionary, occasionally replace it
             logger.debug("DEBUG: Corrected? - Before random chance for funny_names_dict:")
             logger.debug(corrected)
