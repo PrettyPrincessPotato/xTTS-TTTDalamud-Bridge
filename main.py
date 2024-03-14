@@ -49,7 +49,7 @@ def setup_json_paths():
     MALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'maleVoices.json')
     SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(main_dir, 'data', 'symbolsAndEmotes.json')
 
-
+setup_json_paths()
 
 # Create a logger
 logger = logging.getLogger(__name__)
