@@ -3,13 +3,11 @@ import queue
 import threading
 import os
 import logging
-import sys
 
 os.environ['TEST_MODE'] = 'true'
 
 # Import your main script
-import main  # Replace this with the name of your script
-sys.path.append('..')  # Add the parent directory to sys.path
+import main
 
 # Override the setup_json_paths function to set up paths for the test environment
 def setup_json_paths_for_test():
