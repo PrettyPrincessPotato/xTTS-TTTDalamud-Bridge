@@ -1,3 +1,9 @@
+'''
+TODO:
+    Reorganize files to modulate and organize the project
+    update requirements.txt it's super out of date by now.
+'''
+
 # IMPORTS
 import json
 import requests
@@ -29,7 +35,17 @@ from scipy.io.wavfile import write
 # Create an inflect engine, which is used to pluralize words.
 inflect_engine = engine()
 
+# TODO: eventually remove this old code
 debug = True  # Initialize debug
+
+# Define the file paths for all JSON files in the 'data' directory
+DICT_JSON_PATH = 'data/dict.json'
+FEMALE_VOICES_JSON_PATH = 'data/femaleVoices.json'
+FUNNY_NAMES_JSON_PATH = 'data/funnyNames.json'
+IMPORTANT_VOICES_JSON_PATH = 'data/importantVoices.json'
+MALE_VOICES_JSON_PATH = 'data/maleVoices.json'
+SYMBOLS_AND_EMOTES_JSON_PATH = 'data/symbolsAndEmotes.json'
+
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -110,11 +126,11 @@ keyboard_listener.start()
 ############################################
 def get_voice(speaker, gender=None, source=None):
     # Read each default voice and every importantVoice and assign them variables.
-    with open('maleVoices.json', 'r') as f:
+    with open(MALE_VOICES_JSON_PATH, 'r') as f:
         maleVoices = json.load(f)
-    with open('femaleVoices.json', 'r') as f:
+    with open(FEMALE_VOICES_JSON_PATH, 'r') as f:
         femaleVoices = json.load(f)
-    with open('importantVoices.json', 'r') as f:
+    with open(IMPORTANT_VOICES_JSON_PATH, 'r') as f:
         importantVoices = json.load(f)
     # Check if this voice is assigned already
     if speaker in importantVoices:
@@ -139,9 +155,9 @@ def get_voice(speaker, gender=None, source=None):
     if speaker == '' or speaker == '???':
         return voice # If the speaker is empty, return the voice without saving it
 
-    # Save the assigned voice to importantVoices.json
+    # Save the assigned voice to importantVoices json
     importantVoices[speaker] = voice
-    with open('importantVoices.json', 'w') as f:
+    with open(IMPORTANT_VOICES_JSON_PATH, 'w') as f:
         json.dump(importantVoices, f, indent=4)
     
     return voice
@@ -149,7 +165,7 @@ def get_voice(speaker, gender=None, source=None):
 # Function to symbols and emoticons
 def replace_symbols_and_emoticons(text):
     # Load the symbols and emoticons from the JSON file
-    with open('symbolsAndEmotes.json', 'r') as f:
+    with open(SYMBOLS_AND_EMOTES_JSON_PATH, 'r') as f:
         symbolsAndEmotesJson = json.load(f)
 
     # Replace each symbol or emoticon in the text
@@ -232,13 +248,13 @@ def process_request():
         logger.debug(corrected_words_and_punctuation)
 
         # Load the pronunciation dictionary
-        with open('dict.json', 'r') as f:
+        with open(DICT_JSON_PATH, 'r') as f:
             pronunciation_dict = json.load(f)
             logger.debug("DEBUG: Loaded pronunciation dictionary")
             logger.debug(pronunciation_dict)
                 
         # Load the funny names dictionary
-        with open('funnyNames.json', 'r') as f:
+        with open(FUNNY_NAMES_JSON_PATH, 'r') as f:
             funny_names_dict = json.load(f)
             logger.debug("DEBUG: Loaded funny names dictionary")
             logger.debug(funny_names_dict)
