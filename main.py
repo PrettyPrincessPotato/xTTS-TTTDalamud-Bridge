@@ -16,6 +16,7 @@ import logging
 import re
 import pyautogui
 import os
+import csv
 import soundfile as sf
 import numpy as np
 from pynput import mouse
@@ -49,8 +50,15 @@ logger.info("Starting script")
 
 # Stores the session as a variable so credentials are not needed to be entered every time.
 s = Session()
-# Defines URL as the TTS to audio link on Kelly's server
-url = 'https://voxbox.tigristech.org/tts_to_audio/'
+
+# Defines the path to the CSV file which is the TTS server URL
+csv_file_path = './secretKeys/URL.csv'
+
+# Loads the private CSV so that the TTS server URL doesn't get leaked
+with open(csv_file_path, mode='r', encoding='utf-8') as file:
+    csv_reader = csv.reader(file)
+    # Since the CSV contains only one line with the URL, we can use next() to read it
+    url = next(csv_reader)[0]  # This assumes the URL is in the first column
 
 # Should the script be running?
 runScript = threading.Event()
@@ -321,7 +329,7 @@ def process_request():
         try:
             data, samplerate = sf.read(io.BytesIO(audio_data))
         except RuntimeError:
-            print("Error: Unable to read response from TTS server as an audio file.")
+            logger.error("Error: Unable to read response from TTS server as an audio file.")
             continue  # Skip the rest of this iteration and go back to the start of the loop
         
         # Convert the data to PCM
@@ -439,24 +447,19 @@ def main():
     if os.getenv('TEST_MODE') != 'true':  # Check if the script is not running in test mode
         while not runScript.is_set():
             try:
-                if debug:
-                    print("Attempting to connect to the websocket...")
+                logger.debug("Attempting to connect to the websocket...")
                 websocket = create_connection("ws://localhost:8080/Messages")
-                if debug:
-                    print("Connected!")
+                logger.debug("Connected!")
                 while not runScript.is_set():
-                    if debug:
-                        print("Waiting for message...")
+                    logger.debug("Waiting for message...")
                     ready_to_read, _, _ = select.select([websocket.sock], [], [], 1)
                     if ready_to_read:
-                        if debug:
-                            print("Got message!")
+                        logger.debug("Got message!")
                         jsonString = websocket.recv()
                         jsonFile = json.loads(jsonString)
                         request_queue.put(jsonFile)
             except Exception as e:
-                if debug:
-                    print(f"Failed to connect to the websocket: {e}")
+                logger.error(f"Failed to connect to the websocket: {e}")
                 time.sleep(1)  # Wait for a second before retrying
 
 
@@ -480,27 +483,21 @@ def debug():
             runScript.set()
             clear_queue(request_queue)
             clear_queue(audio_queue)
-            if debug:
-                for thread in threading.enumerate():
-                    print(thread.name)
-            if debug:
-                print("Attempting to join worker thread")
+            
+            for thread in threading.enumerate():
+                logger.debug(thread.name)
+            logger.debug("Attempting to join worker thread")
             worker.join()
-            if debug:
-                print("Joined worker thread")
+            logger.debug("Joined worker thread")
             main_thread.join()
-            if debug:
-                print("Joined main thread")
+            logger.debug("Joined main thread")
             play_audio_thread.join()
-            if debug:
-                print("Joined play_audio thread")
-            if debug:
-                print("Joined debug thread")
+            logger.debug("Joined play_audio thread")
+            logger.debug("Joined debug thread")
             break
 
         elif command == "help":
-            if debug:
-                print("psst, you're in debug mode. Here's a list of commands:")
+            print(f'Logger is set to {logger.getEffectiveLevel()} mode.')
             print("===== debug on =====")
             print("Turns debug mode on.")
             print("===== debug off =====")

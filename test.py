@@ -7,7 +7,7 @@ import logging
 os.environ['TEST_MODE'] = 'true'
 
 # Import your main script
-import project  # Replace this with the name of your script
+import main  # Replace this with the name of your script
 
 # This is the request you want to send to your script
 fake_request = {
@@ -37,7 +37,7 @@ logger.debug("This is a debug message from test.py")
 request_queue = queue.Queue()
 
 # Set the request_queue of your main script to the request_queue of your test script
-project.set_request_queue(request_queue)
+main.set_request_queue(request_queue)
 
 # Put the fake request into the queue
 request_queue.put(fake_request)
@@ -46,4 +46,4 @@ request_queue.put(fake_request)
 runScript = threading.Event()
 
 # Start your script
-project.main()  # Assuming your main function is named "main"
+main.main()  # Assuming your main function is named "main"

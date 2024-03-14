@@ -8,4 +8,6 @@ __pycache__/
 *.gz
 *.sqlite
 *.OLD
+.env
 venv/
+secretKeys/
