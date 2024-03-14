@@ -50,16 +50,6 @@ def setup_json_paths():
     MALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'maleVoices.json')
     SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(main_dir, 'data', 'symbolsAndEmotes.json')
 
-# Call the function to set up paths for production environment
-#setup_json_paths()
-'''main_dir = os.path.dirname(os.path.realpath(__file__))
-DICT_JSON_PATH = os.path.join(main_dir, 'data', 'dict.json')
-FEMALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'femaleVoices.json')
-FUNNY_NAMES_JSON_PATH = os.path.join(main_dir, 'data', 'funnyNames.json')
-IMPORTANT_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'importantVoices.json')
-MALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'maleVoices.json')
-SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(main_dir, 'data', 'symbolsAndEmotes.json')'''
-
 
 
 # Create a logger
