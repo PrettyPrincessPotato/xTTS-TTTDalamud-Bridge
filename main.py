@@ -38,13 +38,28 @@ inflect_engine = engine()
 # TODO: eventually remove this old code
 debug = True  # Initialize debug
 
-# Define the file paths for all JSON files in the 'data' directory
-DICT_JSON_PATH = 'data/dict.json'
-FEMALE_VOICES_JSON_PATH = 'data/femaleVoices.json'
-FUNNY_NAMES_JSON_PATH = 'data/funnyNames.json'
-IMPORTANT_VOICES_JSON_PATH = 'data/importantVoices.json'
-MALE_VOICES_JSON_PATH = 'data/maleVoices.json'
-SYMBOLS_AND_EMOTES_JSON_PATH = 'data/symbolsAndEmotes.json'
+
+# Function to set up JSON paths, this is so test.py can run while in another folder.
+def setup_json_paths():
+    global DICT_JSON_PATH, FEMALE_VOICES_JSON_PATH, FUNNY_NAMES_JSON_PATH, IMPORTANT_VOICES_JSON_PATH, MALE_VOICES_JSON_PATH, SYMBOLS_AND_EMOTES_JSON_PATH
+    main_dir = os.path.dirname(os.path.realpath(__file__))
+    DICT_JSON_PATH = os.path.join(main_dir, 'data', 'dict.json')
+    FEMALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'femaleVoices.json')
+    FUNNY_NAMES_JSON_PATH = os.path.join(main_dir, 'data', 'funnyNames.json')
+    IMPORTANT_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'importantVoices.json')
+    MALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'maleVoices.json')
+    SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(main_dir, 'data', 'symbolsAndEmotes.json')
+
+# Call the function to set up paths for production environment
+#setup_json_paths()
+'''main_dir = os.path.dirname(os.path.realpath(__file__))
+DICT_JSON_PATH = os.path.join(main_dir, 'data', 'dict.json')
+FEMALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'femaleVoices.json')
+FUNNY_NAMES_JSON_PATH = os.path.join(main_dir, 'data', 'funnyNames.json')
+IMPORTANT_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'importantVoices.json')
+MALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'maleVoices.json')
+SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(main_dir, 'data', 'symbolsAndEmotes.json')'''
+
 
 
 # Create a logger

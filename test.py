@@ -9,6 +9,19 @@ os.environ['TEST_MODE'] = 'true'
 # Import your main script
 import main  # Replace this with the name of your script
 
+# Override the setup_json_paths function to set up paths for the test environment
+def setup_json_paths_for_test():
+    test_dir = os.path.dirname(os.path.realpath(__file__))
+    main.DICT_JSON_PATH = os.path.join(test_dir, 'data', 'dict.json')
+    main.FEMALE_VOICES_JSON_PATH = os.path.join(test_dir, 'data', 'femaleVoices.json')
+    main.FUNNY_NAMES_JSON_PATH = os.path.join(test_dir, 'data', 'funnyNames.json')
+    main.IMPORTANT_VOICES_JSON_PATH = os.path.join(test_dir, 'data', 'importantVoices.json')
+    main.MALE_VOICES_JSON_PATH = os.path.join(test_dir, 'data', 'maleVoices.json')
+    main.SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(test_dir, 'data', 'symbolsAndEmotes.json')
+
+# Call the function to set up paths for the test environment
+setup_json_paths_for_test()
+
 # This is the request you want to send to your script
 fake_request = {
     'Speaker': 'Potato Princess',
