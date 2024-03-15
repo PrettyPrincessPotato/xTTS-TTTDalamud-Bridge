@@ -2,7 +2,6 @@
 TODO:
     Reorganize files to modulate and organize the project
     Add a way to pause the audio
-    Fix the 1% chance for funny names, currently it does a 1% roll per word, it needs to check if the word is in the dictionary first and then do a 1% roll
 '''
 
 # IMPORTS
@@ -37,9 +36,6 @@ from my_app.audioPlayer import play_audio, get_device_index
 
 # Create an inflect engine, which is used to pluralize words.
 inflect_engine = engine()
-
-# TODO: eventually remove this old code
-debug = True  # Initialize debug
 
 # Function to set up JSON paths, this is so test.py can run while in another folder.
 def setup_json_paths():
@@ -263,19 +259,18 @@ def process_request():
             # If the word is in the funny names dictionary, occasionally replace it
             logger.debug("DEBUG: Corrected? - Before random chance for funny_names_dict:")
             logger.debug(corrected)
-            if not corrected and random.random() < 0.01:  # 1% chance
+            if word_or_punctuation.lower() in funny_names_dict and random.random() < 10.01:  # 1% chance
                 logger.debug("DEBUG: Congrats! You got the 1 percent chance for funny_names_dict!")
                 logger.debug("DEBUG: Any more debugging is irrelivant for now, as the word being replaced is so hilariously different you would know if it worked.")
                 logger.debug("DEBUG: this is an issue for later tater.")
-                if word_or_punctuation.lower() in funny_names_dict:
-                    # Randomly select a replacement from the list
-                    corrected_word_or_punctuation = random.choice(funny_names_dict[word_or_punctuation.lower()])
-                    corrected = True  # Update the flag
-                elif word_or_punctuation.lower().endswith('s') and word_or_punctuation.lower()[:-1] in funny_names_dict:
-                    # Randomly select a replacement from the list and pluralize it
-                    corrected_word_or_punctuation = inflect_engine.plural(random.choice(funny_names_dict[word_or_punctuation.lower()[:-1]]))
-                    corrected = True  # Update the flag
-                        # If the word or punctuation is in the pronunciation dictionary, replace it
+                # Randomly select a replacement from the list
+                corrected_word_or_punctuation = random.choice(funny_names_dict[word_or_punctuation.lower()])
+                corrected = True  # Update the flag
+            elif word_or_punctuation.lower().endswith('s') and word_or_punctuation.lower()[:-1] in funny_names_dict:
+                # Randomly select a replacement from the list and pluralize it
+                corrected_word_or_punctuation = inflect_engine.plural(random.choice(funny_names_dict[word_or_punctuation.lower()[:-1]]))
+                corrected = True  # Update the flag
+
             if not corrected and word_or_punctuation.lower() in pronunciation_dict:
                 corrected_word_or_punctuation = pronunciation_dict[word_or_punctuation.lower()]
                 corrected = True  # Update the flag
@@ -360,7 +355,6 @@ logger.debug("Started play_audio thread")
 # CONNECT TO THE WEBSOCKET AND GET MESSAGES#
 ############################################
 def main():
-    global debug
     if os.getenv('TEST_MODE') != 'true':  # Check if the script is not running in test mode
         while not runScript.is_set():
             try:
@@ -381,19 +375,17 @@ def main():
 
 
 # Define this function as the debug thread.
-def debug():
-    global debug # Declare debug as a global variable at the start of the function
-    
+def debug():    
     while not runScript.is_set():
         command = input("Enter a command: ")
 
         if command == "debug on":
             print("Debug mode on")
-            debug = True
+            logger.setLevel(logging.DEBUG)
 
         elif command == "debug off":
             print("Debug mode off")
-            debug = False
+            logger.setLevel(logging.INFO)
 
         elif command == "exit":
             print("Shutting down...")

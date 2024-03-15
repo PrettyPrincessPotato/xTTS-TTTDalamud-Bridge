@@ -26,7 +26,7 @@ setup_json_paths_for_test()
 fake_request = {
     'Speaker': 'Potato Princess',
     'Type': 'Say',
-    'Payload': 'this is a test of the TTS system. i am not Alphinaud. I am enjoying this great game of Final Fantasy xiv. I am also a very gay tater.',
+    'Payload': 'this is a test of the TTS system. i am not Alphinaud. I am enjoying this great game of Final Fantasy xiv. I am also a very gay tater. Not Tatarus.',
     'Voice': {
         'Id': -1,
         'Name': 'Female',
