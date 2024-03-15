@@ -1,6 +1,6 @@
-'''The test's purpose is to test and make sure that main.py can process audio and play it back after sending it to the server, ignoring the dalamudTTS requirement.'''
-
-import json
+'''The test's purpose is to test and make sure that main.py can process audio and play it back after sending it to the server, ignoring the dalamudTTS requirement.
+HEY SILLY, REMEMBER TO RUN THIS WITH F5 IN MAIN.PY.'''
+# Imports!
 import queue
 import threading
 import os
@@ -43,6 +43,11 @@ fake_request = {
 logging.basicConfig(filename='project.log', level=logging.DEBUG, 
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 logger = logging.getLogger('test')  # Use a different logger name
+
+# Check if the 'TEST_MODE' environment variable is set
+if 'TEST_MODE' not in os.environ:
+    logger.error("The 'TEST_MODE' environment variable is not set. Please run this script using the Visual Studio Code debugger.")
+    print("Error: The 'TEST_MODE' environment variable is not set. Please run this script using the Visual Studio Code debugger.")
 
 # Now you can use logger.debug(), logger.info(), etc. in test.py
 logger.debug("This is a debug message from test.py")
