@@ -1,26 +1,27 @@
+'''The test's purpose is to test and make sure that main.py can process audio and play it back after sending it to the server, ignoring the dalamudTTS requirement.'''
+
 import json
 import queue
 import threading
 import os
 import logging
+import my_app.dataManager as dM
 
 os.environ['TEST_MODE'] = 'true'
 
 # Import your main script
 import main
 
-# Override the setup_json_paths function to set up paths for the test environment
-def setup_json_paths_for_test():
-    test_dir = os.path.dirname(os.path.realpath(__file__))
-    main.DICT_JSON_PATH = os.path.join(test_dir, '..', 'data', 'dict.json')
-    main.FEMALE_VOICES_JSON_PATH = os.path.join(test_dir, '..', 'data', 'femaleVoices.json')
-    main.FUNNY_NAMES_JSON_PATH = os.path.join(test_dir, '..', 'data', 'funnyNames.json')
-    main.IMPORTANT_VOICES_JSON_PATH = os.path.join(test_dir, '..', 'data', 'importantVoices.json')
-    main.MALE_VOICES_JSON_PATH = os.path.join(test_dir, '..', 'data', 'maleVoices.json')
-    main.SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(test_dir, '..', 'data', 'symbolsAndEmotes.json')
+# Set up the JSON paths
+json_paths = dM.setup_json_paths()
 
-# Call the function to set up paths for the test environment
-setup_json_paths_for_test()
+# Use the paths from the dictionary
+DICT_JSON_PATH = json_paths['DICT_JSON_PATH']
+FEMALE_VOICES_JSON_PATH = json_paths['FEMALE_VOICES_JSON_PATH']
+FUNNY_NAMES_JSON_PATH = json_paths['FUNNY_NAMES_JSON_PATH']
+IMPORTANT_VOICES_JSON_PATH = json_paths['IMPORTANT_VOICES_JSON_PATH']
+MALE_VOICES_JSON_PATH = json_paths['MALE_VOICES_JSON_PATH']
+SYMBOLS_AND_EMOTES_JSON_PATH = json_paths['SYMBOLS_AND_EMOTES_JSON_PATH']
 
 # This is the request you want to send to your script
 fake_request = {

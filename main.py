@@ -8,8 +8,6 @@ TODO:
 import json
 import requests
 import roman
-import pyaudio
-import wave
 import io
 import sys
 import os
@@ -21,9 +19,9 @@ import time
 import warnings
 import logging
 import re
-import pyautogui
 import os
 import csv
+import my_app.dataManager as dM
 import soundfile as sf
 import numpy as np
 from pynput import mouse
@@ -31,24 +29,22 @@ from pynput import keyboard
 from inflect import engine
 from requests import Request, Session
 from websocket import create_connection
-from scipy.io.wavfile import write
-from my_app.audioPlayer import play_audio, get_device_index
+from my_app.audioPlayer import play_audio
 
 # Create an inflect engine, which is used to pluralize words.
 inflect_engine = engine()
 
-# Function to set up JSON paths, this is so test.py can run while in another folder.
-def setup_json_paths():
-    global DICT_JSON_PATH, FEMALE_VOICES_JSON_PATH, FUNNY_NAMES_JSON_PATH, IMPORTANT_VOICES_JSON_PATH, MALE_VOICES_JSON_PATH, SYMBOLS_AND_EMOTES_JSON_PATH
-    main_dir = os.path.dirname(os.path.realpath(__file__))
-    DICT_JSON_PATH = os.path.join(main_dir, 'data', 'dict.json')
-    FEMALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'femaleVoices.json')
-    FUNNY_NAMES_JSON_PATH = os.path.join(main_dir, 'data', 'funnyNames.json')
-    IMPORTANT_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'importantVoices.json')
-    MALE_VOICES_JSON_PATH = os.path.join(main_dir, 'data', 'maleVoices.json')
-    SYMBOLS_AND_EMOTES_JSON_PATH = os.path.join(main_dir, 'data', 'symbolsAndEmotes.json')
+# Set up the JSON paths
+json_paths = dM.setup_json_paths()
 
-setup_json_paths()
+# Use the paths from the dictionary
+DICT_JSON_PATH = json_paths['DICT_JSON_PATH']
+FEMALE_VOICES_JSON_PATH = json_paths['FEMALE_VOICES_JSON_PATH']
+FUNNY_NAMES_JSON_PATH = json_paths['FUNNY_NAMES_JSON_PATH']
+IMPORTANT_VOICES_JSON_PATH = json_paths['IMPORTANT_VOICES_JSON_PATH']
+MALE_VOICES_JSON_PATH = json_paths['MALE_VOICES_JSON_PATH']
+SYMBOLS_AND_EMOTES_JSON_PATH = json_paths['SYMBOLS_AND_EMOTES_JSON_PATH']
+
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -60,7 +56,6 @@ if os.getenv('TEST_MODE') == 'true':
 else:
     logging.basicConfig(filename='project.log', level=logging.INFO, 
                         format='%(asctime)s %(levelname)s %(name)s %(message)s')
-
 
 
 # Something pretty to look at for my monke brain
@@ -259,7 +254,7 @@ def process_request():
             # If the word is in the funny names dictionary, occasionally replace it
             logger.debug("DEBUG: Corrected? - Before random chance for funny_names_dict:")
             logger.debug(corrected)
-            if word_or_punctuation.lower() in funny_names_dict and random.random() < 10.01:  # 1% chance
+            if word_or_punctuation.lower() in funny_names_dict and random.random() < 0.01:  # 1% chance
                 logger.debug("DEBUG: Congrats! You got the 1 percent chance for funny_names_dict!")
                 logger.debug("DEBUG: Any more debugging is irrelivant for now, as the word being replaced is so hilariously different you would know if it worked.")
                 logger.debug("DEBUG: this is an issue for later tater.")
