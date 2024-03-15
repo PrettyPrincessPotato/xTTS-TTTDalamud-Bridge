@@ -261,7 +261,10 @@ def process_request():
                 # Randomly select a replacement from the list
                 corrected_word_or_punctuation = random.choice(funny_names_dict[word_or_punctuation.lower()])
                 corrected = True  # Update the flag
-            elif word_or_punctuation.lower().endswith('s') and word_or_punctuation.lower()[:-1] in funny_names_dict:
+            elif word_or_punctuation.lower().endswith('s') and word_or_punctuation.lower()[:-1] in funny_names_dict and random.random() < 0.01:  # 1% chance:
+                logger.debug("DEBUG: Congrats! You got the 1 percent chance for funny_names_dict! (plural)")
+                logger.debug("DEBUG: Any more debugging is irrelivant for now, as the word being replaced is so hilariously different you would know if it worked.")
+                logger.debug("DEBUG: this is an issue for later tater.")
                 # Randomly select a replacement from the list and pluralize it
                 corrected_word_or_punctuation = inflect_engine.plural(random.choice(funny_names_dict[word_or_punctuation.lower()[:-1]]))
                 corrected = True  # Update the flag
