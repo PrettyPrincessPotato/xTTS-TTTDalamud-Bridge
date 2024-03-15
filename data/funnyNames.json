@@ -6,7 +6,10 @@
         "rawr xD nuzzlewuzzles uwu fuzzy wuzzy"
     ],
     "thancred": [
-        "Rugged Rogue"
+        "Rugged Rogue",
+        "Rogue of the Realm",
+        "Sneaky Scoundrel",
+        "Dashing Duelist"
     ],
     "lol": [
         "teehee",
@@ -156,5 +159,249 @@
     ],
     "varis": [
         "Garlean Emperor"
+    ],
+    "warrior of light": [
+        "Heroic Hallyhooper",
+        "Luminary of Lumens",
+        "Champion of Crystals"
+    ],
+    "moogles": [
+        "Fuzzy Wuzzy Pom Pals",
+        "Fluffy Mailmen",
+        "Pom-tastic Pranksters"
+    ],
+    "gilgamesh": [
+        "Multi-armed Marauder",
+        "Sword Collector Extraordinaire"
+    ],
+    "lalafell": [
+        "Tiny Tater Tot",
+        "Pint-sized Powerhouse",
+        "Miniature Mischief-maker"
+    ],
+    "chocobo": [
+        "Feathered Speedster",
+        "Fluffy Mount Friend",
+        "Wark-tastic Wanderer"
+    ],
+    "bahamut": [
+        "Megaflare Maestro",
+        "Draconic Destroyer",
+        "Calamity's Child"
+    ],
+    "tonberry": [
+        "Stabby Little Green Guy",
+        "Lantern-wielding Lurker",
+        "Chef Knife Charmer"
+    ],
+    "shiva": [
+        "Diamond Dust Dancer",
+        "Frosty Femme Fatale",
+        "Ice Queen Elegance"
+    ],
+    "ramuh": [
+        "Beard of Bolts",
+        "Judgment Bolt Joviality",
+        "Elderly Electro Sage"
+    ],
+    "ifrit": [
+        "Inferno Incarnate",
+        "Flame-throwing Frenzy",
+        "Hellfire's Handler"
+    ],
+    "titan": [
+        "Earthen Ego",
+        "Landslide Loving Giant",
+        "Rocky Rumbler"
+    ],
+    "leviathan": [
+        "Whorl of the Waves",
+        "Serpent of the Sea",
+        "Tidal Terror"
+    ],
+    "carbuncle": [
+        "Glittering Gem Guardian",
+        "Adorable Arcane Ally",
+        "Sparkly Summon Spectacle"
+    ],
+    "moogle": [
+        "Pom-pom Postmaster",
+        "Cuddly Courier",
+        "Wingéd Letter-bringer"
+    ],
+    "fat chocobo": [
+        "Chubby Chaser",
+        "Gysahl Green Gobbler",
+        "Rotund Rider"
+    ],
+    "sabotender": [
+        "Prickly Party Cactus",
+        "Dancing Desert Dweller",
+        "Needle Nuisance"
+    ],
+    "ultros": [
+        "Tentacle Trickster",
+        "Purpurate Provocateur",
+        "Octal Joker"
+    ],
+    "kupo": [
+        "Moogle Motto",
+        "Pom-pom Proclamation",
+        "Fluffy Catchphrase"
+    ],
+    "gil": [
+        "Eorzean Currency",
+        "Adventurer's Pocket Change",
+        "Golden Glimmer"
+    ],
+    "aether": [
+        "Ethereal Essence",
+        "Mystical Mana",
+        "Arcane Atmosphere"
+    ],
+    "materia": [
+        "Crystallized Capabilities",
+        "Gem of Gains",
+        "Power Pebble"
+    ],
+    "magitek": [
+        "Mechanical Might",
+        "Automated Armament",
+        "Gearwork Goliath"
+    ],
+    "dragoon": [
+        "Skyward Spearman",
+        "Jumping Javelineer",
+        "Wyrm's Wrath"
+    ],
+    "white mage": [
+        "Healer of Halidom",
+        "Benediction Bearer",
+        "Cure Conjurer"
+    ],
+    "black mage": [
+        "Dark Arts Dabbler",
+        "Flare Flinger",
+        "Explosion Expert"
+    ],
+    "red mage": [
+        "Vermilion Vindicator",
+        "Rapier-wielding Riftmender",
+        "Dualcaster Duelist"
+    ],
+    "blue mage": [
+        "Azure Arcanist",
+        "Beastly Spellborrower",
+        "Mimicry Maestro"
+    ],
+    "summoner": [
+        "Primal Pactmaker",
+        "Egi Enthusiast",
+        "Arcanum Adept"
+    ],
+    "scholar": [
+        "Tome-toting Tactician",
+        "Aetherflow Aficionado",
+        "Fairy's Friend"
+    ],
+    "ninja": [
+        "Shadow-stepping Shinobi",
+        "Silent Shuriken Slinger",
+        "Kunai Connoisseur"
+    ],
+    "samurai": [
+        "Katana-wielding Kensei",
+        "Bushido Blade",
+        "Iaijutsu Idol"
+    ],
+    "bard": [
+        "Melodic Marksman",
+        "Songstress Sniper",
+        "Ballad Bard"
+    ],
+    "machinist": [
+        "Bullet-blasting Tinkerer",
+        "Automaton Artisan",
+        "Cannon Craftsman"
+    ],
+    "dancer": [
+        "Rhythmic Revolutionary",
+        "Chakram Choreographer",
+        "Step Savant"
+    ],
+    "dark knight": [
+        "Grit Guardian",
+        "Midnight Marauder",
+        "Soul Siphoner"
+    ],
+    "gunbreaker": [
+        "Firearm Fighter",
+        "Powder-packed Protector",
+        "Barrel Blade Bearer"
+    ],
+    "astrologian": [
+        "Starry-eyed Seer",
+        "Celestial Card Caster",
+        "Heavenly Harbinger"
+    ],
+    "reaper": [
+        "Scythe-swinging Soulreaver",
+        "Voidsent Vanguard",
+        "Harvester of Heartbeats"
+    ],
+    "sage": [
+        "Nouliths' Navigator",
+        "Wisdom Weaver",
+        "Barrier Bringer"
+    ],
+    "eorzea": [
+        "Land of Light",
+        "Realm of Resplendence",
+        "Continent of Crystals"
+    ],
+    "primal": [
+        "Eikon of Energy",
+        "Summoned Sovereign",
+        "Deific Dominator"
+    ],
+    "ascian": [
+        "Masked Malefactor",
+        "Darkness Dealer",
+        "Enigmatic Envoy"
+    ],
+    "scions": [
+        "Heroes of Hydaelyn",
+        "Eorzea's Emissaries",
+        "Champions of the Crystal"
+    ],
+    "garlemald": [
+        "Empire of Iron",
+        "Machinist's Motherland",
+        "Legion's Lair"
+    ],
+    "duty finder": [
+        "Quest Queue",
+        "Fate's Fortune Finder",
+        "Raid Roster Roulette"
+    ],
+    "limit break": [
+        "Party Power Play",
+        "Group Gauge Gambit",
+        "Ultimate Unleasher"
+    ],
+    "fashion report": [
+        "Style Scoring Showdown",
+        "Glamour Grading Gala",
+        "Outfit Ordeal"
+    ],
+    "triple triad": [
+        "Card Clash Craze",
+        "Deck Dueling Delight",
+        "Triple Threat Tournament"
+    ],
+    "wondrous tails": [
+        "Adventurer's Achievement Album",
+        "Explorer's Endeavor Ephemera",
+        "Heroic Happenings Handbook"
     ]
 }
