@@ -38,7 +38,7 @@ fake_request = {
         'VoiceName': None,
         'EnabledBackend': 1
     },
-    'Source': 'Chat'
+    'Source': 'AddonTalk'
 }
 
 # Set up the logger

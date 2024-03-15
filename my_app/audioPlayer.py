@@ -10,6 +10,7 @@ import queue
 import logging
 import numpy as np
 from scipy.io.wavfile import write
+from pynput import mouse, keyboard
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -23,12 +24,39 @@ def get_device_index(device_name):
             return info["index"]
     raise ValueError(f"No device with name {device_name} found")
 
+# This will be set to True when a mouse event occurs
+mouse_event_occurred = False
+
+# This will be set to True when a keyboard event occurs
+keyboard_event_occurred = False
+
+# Define the mouse and keyboard listeners
+def on_move(x, y):
+    global mouse_event_occurred
+    mouse_event_occurred = time.time()
+
+def on_click(x, y, button, pressed):
+    global mouse_event_occurred
+    mouse_event_occurred = time.time()
+
+def on_key_press(key):
+    global keyboard_event_occurred
+    keyboard_event_occurred = time.time()
+
+# Start the mouse listener
+listener = mouse.Listener(on_move=on_move, on_click=on_click)
+listener.start()
+
+# Start the keyboard listener
+keyboard_listener = keyboard.Listener(on_press=on_key_press)
+keyboard_listener.start()
 
 ############################################
 # PLAY THE AUDIO AND SIMULATE MOUSE CLICK  #
 ############################################
-def play_audio(runScript, audio_queue, mouse_event_occurred, keyboard_event_occurred):
-    logger.debug(f"play_audio called with runScript={runScript}, audio_queue={audio_queue}, mouse_event_occurred={mouse_event_occurred}, keyboard_event_occurred={keyboard_event_occurred}")
+def play_audio(runScript, audio_queue):
+    global mouse_event_occurred, keyboard_event_occurred
+    logger.debug(f"play_audio called with runScript={runScript}, audio_queue={audio_queue}")
     while not runScript.is_set():
         logger.debug("Audio player is running")
         try:
@@ -98,6 +126,9 @@ def play_audio(runScript, audio_queue, mouse_event_occurred, keyboard_event_occu
         # Simulate a mouse click to progress the message in FF14
         if jsonFile.get('Source') == 'AddonTalk':
             cooldownTime = 4  # Cooldown time in seconds
+            logger.debug(f"Simulating mouse click with cooldown time {cooldownTime}")
+            logger.debug(f"Mouse event occurred time check: {time.time() - mouse_event_occurred}")
+            logger.debug(f"Keyboard event occurred time check: {time.time() - keyboard_event_occurred}")
             if time.time() - mouse_event_occurred > cooldownTime and time.time() - keyboard_event_occurred > cooldownTime:
                 pyautogui.click(680, 1041)  # random point in main monitor between my 2 monitors, your mileage may vary
 

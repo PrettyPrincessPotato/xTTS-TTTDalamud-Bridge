@@ -77,12 +77,6 @@ with open(csv_file_path, mode='r', encoding='utf-8') as file:
 # Should the script be running?
 runScript = threading.Event()
 
-# This will be set to True when a mouse event occurs
-mouse_event_occurred = False
-
-# This will be set to True when a keyboard event occurs
-keyboard_event_occurred = False
-
 # Create two queues, one for the requests and one for the audio data
 request_queue = None
 audio_queue = queue.Queue()
@@ -95,27 +89,6 @@ def set_request_queue(q):
 
 if request_queue is None:
     request_queue = queue.Queue()
-
-# Define the mouse and keyboard listeners
-def on_move(x, y):
-    global mouse_event_occurred
-    mouse_event_occurred = time.time()
-
-def on_click(x, y, button, pressed):
-    global mouse_event_occurred
-    mouse_event_occurred = time.time()
-
-def on_key_press(key):
-    global keyboard_event_occurred
-    keyboard_event_occurred = time.time()
-
-# Start the mouse listener
-listener = mouse.Listener(on_move=on_move, on_click=on_click)
-listener.start()
-
-# Start the keyboard listener
-keyboard_listener = keyboard.Listener(on_press=on_key_press)
-keyboard_listener.start()
 
 
 
@@ -344,7 +317,7 @@ def clear_queue(q):
 
 # Start the play_audio function in one thread
 logger.debug("Starting play_audio thread")
-play_audio_thread = threading.Thread(target=play_audio, args=(runScript, audio_queue, mouse_event_occurred, keyboard_event_occurred))
+play_audio_thread = threading.Thread(target=play_audio, args=(runScript, audio_queue))
 logger.debug(f"play_audio_thread: {play_audio_thread}")
 play_audio_thread.start()
 logger.debug("Started play_audio thread")
