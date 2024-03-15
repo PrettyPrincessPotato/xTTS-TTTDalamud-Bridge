@@ -13,9 +13,11 @@ os.environ['TEST_MODE'] = 'true'
 import main
 
 # Set up the JSON paths
+# See dataManager.py for details.
 json_paths = dM.setup_json_paths()
 
 # Use the paths from the dictionary
+# See dataManager.py for details.
 DICT_JSON_PATH = json_paths['DICT_JSON_PATH']
 FEMALE_VOICES_JSON_PATH = json_paths['FEMALE_VOICES_JSON_PATH']
 FUNNY_NAMES_JSON_PATH = json_paths['FUNNY_NAMES_JSON_PATH']
