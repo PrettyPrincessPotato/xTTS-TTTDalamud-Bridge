@@ -16,7 +16,7 @@
     "Aymeric the Blue": "fitnessGramPacerTest",
     "Flame General Aldynn": "mesothelioma",
     "Flustered Temple Knight": "male",
-    "Raubahn": "raubahnClean",
+    "Raubahn": "NewRaubahnClean",
     "Emmanellain the Lofty": "EmmanellainAngry",
     "Lucia the Radiant": "Lucia",
     "The Mongrel": "calm_female",
@@ -440,6 +440,6 @@
     "Peatie": "mesothelioma",
     "Enthused Man": "mesothelioma",
     "Curious Lass": "nanamoUlNamoEchoey",
-    "Nanamo Ul Namo": "calm_female",
+    "Nanamo Ul Namo": "NanamoClean",
     "Otopa Pottopa": "patrickStarSampleButGoodMale"
 }
