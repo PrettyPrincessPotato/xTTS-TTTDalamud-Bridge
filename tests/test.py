@@ -1,5 +1,15 @@
-'''The test's purpose is to test and make sure that main.py can process audio and play it back after sending it to the server, ignoring the dalamudTTS requirement.
-HEY SILLY, REMEMBER TO RUN THIS WITH F5 IN MAIN.PY.'''
+'''
+This Python script is designed to test the functionality of main.py for processing audio and playing it back 
+after sending it to a server, without needing the dalamudTTS requirement. The script is expected to run in the test mode, 
+and it simulates sending requests in JSON format to be processed by main.py, which in turn communicates with external APIs.
+
+The purpose of this script is to validate the ability of main.py to handle various types of requests, 
+such as "Say" in this example, and to ensure that the necessary APIs can effectively convert the text into speech.
+
+To use this script, run it with the F5 key in main.py.
+(This next message is for me, personally. I'm not insulting you, dear reader. I promise. :) )
+HEY SILLY, REMEMBER TO RUN THIS WITH F5 IN MAIN.PY. OTHERWISE, IT WON'T WORK.
+'''
 # Imports!
 import queue
 import threading

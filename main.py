@@ -3,7 +3,12 @@ TODO:
     Reorganize files to modulate and organize the project
     Add a way to pause the audio
     Clean up requirements.txt
+    Add a way to stop the audio
+    Add a way to skip the audio
+    Add a way to change the volume
+    Add docstrings
 '''
+
 
 # IMPORTS
 import json
@@ -24,9 +29,6 @@ import os
 import csv
 import my_app.dataManager as dM
 import soundfile as sf
-import numpy as np
-from pynput import mouse
-from pynput import keyboard
 from inflect import engine
 from requests import Request, Session
 from websocket import create_connection
