@@ -296,11 +296,8 @@ def process_request():
         except RuntimeError:
             logger.error("Error: Unable to read response from TTS server as an audio file.")
             continue  # Skip the rest of this iteration and go back to the start of the loop
-        
-        # Convert the data to PCM
-        pcm_data = np.int16(data * 32767)
 
-        audio_queue.put((pcm_data, samplerate, jsonFile))  # Put processed (PCM data and sample rate) into audio_queue
+        audio_queue.put((audio_data, jsonFile))  # Put the audio data in the audio queue, this should be a .wav file.
 
 # Start a worker thread
 worker = threading.Thread(target=process_request)
