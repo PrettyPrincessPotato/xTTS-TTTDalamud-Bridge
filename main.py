@@ -2,6 +2,7 @@
 TODO:
     Reorganize files to modulate and organize the project
     Add a way to pause the audio
+    Clean up requirements.txt
 '''
 
 # IMPORTS
