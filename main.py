@@ -15,7 +15,6 @@ TODO:
 
 # IMPORTS
 import json
-import pygame
 import sys
 import os
 import threading
