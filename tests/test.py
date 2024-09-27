@@ -16,6 +16,7 @@ import threading
 import os
 import logging
 import my_app.dataManager as dM
+import my_app.queueManager as qM
 
 os.environ['TEST_MODE'] = 'true'
 
@@ -65,16 +66,15 @@ if 'TEST_MODE' not in os.environ:
 logger.debug("This is a debug message from test.py")
 
 # This is the queue you want to put the request into
-request_queue = queue.Queue()
 
 # Set the request_queue of your main script to the request_queue of your test script
-main.set_request_queue(request_queue)
+qM.get_request_queue(main.runScript, qM.queue)
 
 # Put the fake request into the queue
-request_queue.put(fake_request)
+qM.request_queue.put(fake_request)
 
 # This is the threading event that controls whether your script is running
 runScript = threading.Event()
 
 # Start your script
-main.main()  # Assuming your main function is named "main"
+main.websocket_handler()

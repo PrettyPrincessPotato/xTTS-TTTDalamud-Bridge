@@ -1,7 +1,6 @@
-''' TODO: create a module for the TTS to audio. 99% of what you need is in main.py
-    TODO: also consider downloading the output.wav directly to mess with more. Potentially adding a better queue
-          system. One that plays the data and another that loads the data? Just something to keep in mind.
-    TODO: Lower the volume of the audio file. It is too loud.'''
+''' 
+    TODO: create a module for the TTS to audio. 99% of what you need is in main.py
+'''
 
 # Import the required libraries
 #import pyautogui # Disabled for now, as it is not working on Linux.
@@ -11,12 +10,12 @@ import logging
 import os
 # from pynput import mouse, keyboard
 import pygame
+import pygame.mixer
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
 os.environ['SDL_AUDIODRIVER'] = 'pulse'  # 'directsound' or 'alsa' or 'pulse' depending on your system
-import pygame.mixer
 
 # Define the audio player function
 def run_wav(audio_filepath):
@@ -27,6 +26,10 @@ def run_wav(audio_filepath):
     while pygame.mixer.music.get_busy():
         pass
     pygame.mixer.quit()
+
+# This will be set to True when the pause button is pressed.
+pause_pressed = False
+
 ''' -- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX -- 
 # This will be set to True when a mouse event occurs
 mouse_event_occurred = False
@@ -93,3 +96,25 @@ def play_audio(runScript, audio_queue):
                 '''
         # indicate that the task is done
         audio_queue.task_done()
+
+############################################
+#          LISTEN TO PAUSE AUDIO           #
+############################################
+def pause_audio():
+    global pause_pressed
+    logger.debug(f"checking if pygame is running:")
+    if pygame.mixer.get_init() == True:
+        # TODO: impliment
+        pass
+    else:
+        logger.debug(f"button pressed but pygame isn't running, probably unrelated.")
+        logger.debug(f"checking if pause_pressed is true or false anyway to reset, just in case...")
+        if pause_pressed == True:
+            pause_pressed = False
+            logger.debug("pause button was pressed and pygame is not running")
+        else:
+            pass
+        
+
+    
+        

@@ -5,8 +5,14 @@ As of writing, the module is incomplete and is a work in progress, and it only r
 
 # TODO: create a modual for managing data. 99% of what you need is in main.py
 # Function to set up JSON paths, this is so test.py can run while in another folder.
+import json
 import os
+import logging
+import random
+import roman
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 def setup_json_paths():
     # Assuming that 'dataManager.py' is located in the 'my_app' directory
@@ -28,3 +34,90 @@ def setup_json_paths():
     }
     return paths
 
+# Set up the JSON paths
+json_paths = setup_json_paths()
+
+# Use the paths from the dictionary
+DICT_JSON_PATH = json_paths['DICT_JSON_PATH']
+FEMALE_VOICES_JSON_PATH = json_paths['FEMALE_VOICES_JSON_PATH']
+FUNNY_NAMES_JSON_PATH = json_paths['FUNNY_NAMES_JSON_PATH']
+IMPORTANT_VOICES_JSON_PATH = json_paths['IMPORTANT_VOICES_JSON_PATH']
+MALE_VOICES_JSON_PATH = json_paths['MALE_VOICES_JSON_PATH']
+SYMBOLS_AND_EMOTES_JSON_PATH = json_paths['SYMBOLS_AND_EMOTES_JSON_PATH']
+
+'''
+    I'll be honest, I forget why the above code is here, but I'm sure there is a reason. I'm just going to leave it here.
+    Probably fixing paths in case someone has a weird setup. Or perhaps makes it OS-independent. All I know is that it worked/works.
+'''
+
+############################################
+# ASSIGN THE VOICE TO WHOMEVER IS TALKING  #
+############################################
+def get_voice(speaker, gender=None, source=None):
+    # Read each default voice and every importantVoice and assign them variables.
+    with open(MALE_VOICES_JSON_PATH, 'r') as f:
+        maleVoices = json.load(f)
+    with open(FEMALE_VOICES_JSON_PATH, 'r') as f:
+        femaleVoices = json.load(f)
+    with open(IMPORTANT_VOICES_JSON_PATH, 'r') as f:
+        importantVoices = json.load(f)
+    # Check if this voice is assigned already
+    if speaker in importantVoices:
+        return importantVoices[speaker]
+    # Not registered? Make a new one.
+    if gender == "Male":
+        male_voices = list(maleVoices.values())
+        voice = random.choice(male_voices)
+    elif gender == "Female":
+        female_voices = list(femaleVoices.values())
+        voice = random.choice(female_voices)
+    else:
+        # Get a list of all voices
+        all_voices = list(femaleVoices.values()) + list(maleVoices.values())
+        # Return a random voice
+        voice = random.choice(all_voices)
+
+    # Check if the source is 'Chat' and if the gender is not defined
+    if source == 'Chat' and gender == 'None':
+        return voice  # If both conditions are met, return the voice without saving it
+    
+    if speaker == '' or speaker == '???':
+        return voice # If the speaker is empty, return the voice without saving it
+
+    # Save the assigned voice to importantVoices json
+    importantVoices[speaker] = voice
+    with open(IMPORTANT_VOICES_JSON_PATH, 'w') as f:
+        json.dump(importantVoices, f, indent=4)
+    
+    return voice
+
+# Function to symbols and emoticons
+def replace_symbols_and_emoticons(text):
+    # Load the symbols and emoticons from the JSON file
+    with open(SYMBOLS_AND_EMOTES_JSON_PATH, 'r') as f:
+        symbolsAndEmotesJson = json.load(f)
+
+    # Replace each symbol or emoticon in the text
+    for symbol, replacement in symbolsAndEmotesJson.items():
+        text = text.replace(symbol, replacement)
+
+    return text
+
+def convert_roman_numerals_to_arabic(words_and_punctuation):
+    processed_words = []
+    for word in words_and_punctuation:
+        logger.debug(f"DEBUG: in convert_roman_numerals_to_arabic - Word being checked: {word}")
+        if word.lower() == 'i':
+            # If the word is 'I' or 'i', keep it as it is
+            processed_words.append(word)
+        else:
+            try:
+                # Try to convert the word from a Roman numeral to an Arabic numeral
+                arabic_numeral = roman.fromRoman(word.upper())
+                logger.debug(f"DEBUG: in convert_roman_numerals_to_arabic - Converted Roman numeral to Arabic numeral: {arabic_numeral}")
+                processed_words.append(str(arabic_numeral))
+            except:
+                # If the word is not a valid Roman numeral, keep it as it is
+                logger.debug(f"DEBUG: in convert_roman_numerals_to_arabic - {word} is not a valid Roman numeral")
+                processed_words.append(word)
+    return processed_words
