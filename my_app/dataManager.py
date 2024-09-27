@@ -61,7 +61,7 @@ SYMBOLS_AND_EMOTES_JSON_PATH = json_paths['SYMBOLS_AND_EMOTES_JSON_PATH']
 
 '''
     I'll be honest, I forget why the above code is here, but I'm sure there is a reason. I'm just going to leave it here.
-    Probably fixing paths in case someone has a weird setup. Or perhaps makes it OS-independent. All I know is that it worked/works.
+    Probably fixing paths in case someone has a weird setup. Or perhaps makes it OS-independent. All I know is that it works.
 '''
 
 ############################################
