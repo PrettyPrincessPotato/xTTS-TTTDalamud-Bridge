@@ -20,7 +20,7 @@ import threading
 import warnings
 import logging
 import os
-import my_app.dataManager as dM # - Unneeded as of now, keeping just in case.
+import my_app.dataManager as dM
 import my_app.requestProcessor as rP
 import my_app.queueManager as qM
 import my_app.audioPlayer as aP
@@ -64,7 +64,7 @@ procces_request_thread.start()
 
 # Start the play_audio function in one thread. This plays the audio.
 logger.debug("Starting play_audio thread")
-play_audio_thread = threading.Thread(target=aP.play_audio, args=(runScript, qM.audio_queue))
+play_audio_thread = threading.Thread(target=aP.play_audio2, args=(runScript, qM.audio_queue))
 logger.debug(f"play_audio_thread: {play_audio_thread}")
 play_audio_thread.start()
 logger.debug("Started play_audio thread")

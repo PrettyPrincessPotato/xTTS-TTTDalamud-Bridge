@@ -5,6 +5,7 @@
 # Import the required libraries
 #import pyautogui # Disabled for now, as it is not working on Linux.
 import time
+import pydub
 import queue
 import logging
 import os
@@ -23,7 +24,9 @@ def run_wav(audio_filepath):
     pygame.mixer.music.set_volume(0.1)
     pygame.mixer.music.load(audio_filepath)
     pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
+    # sleep in case of lag and so music doesn't instantly end.
+    time.sleep(0.3)
+    while pygame.mixer.music.get_pos() > 0:
         pass
     pygame.mixer.quit()
 
@@ -62,6 +65,35 @@ keyboard_listener.start()
 ############################################
 # PLAY THE AUDIO AND SIMULATE MOUSE CLICK  #
 ############################################
+def play_audio2(runScript, audio_queue):
+    while not runScript.is_set():
+        try:
+            audio_data, jsonFile = audio_queue.get(timeout=1)  # Get next audio data from the queue
+            logger.debug(f"Got audio data from queue: {audio_data}")
+        except queue.Empty:
+            continue
+        audio_file_dir = os.path.abspath("xTTS-TTTDalamud-Bridge/audio_files/audio_file.wav")
+
+        # Write to a WAV file on disk
+        with open(audio_file_dir, "wb") as f:
+            f.write(audio_data)
+        logger.debug("Audio data written to file")
+
+        # wav file needs to be transformed into a mp3 first for pydub to support pausing. .ogg also works, I have no reason behind mp3.
+        wav_to_mp3(runScript, audio_file_dir)
+
+        # set new audio file as the mp3 we just made
+        audio_file_dir = os.path.abspath("xTTS-TTTDalamud-Bridge/audio_files/audio_file.mp3")
+
+        # Play the audio file
+        logger.debug("Audio started playing")
+        run_wav(audio_file_dir)
+        logger.debug("Audio finished playing")
+        
+        # indicate that the task is done
+        audio_queue.task_done()
+
+# Depreciated soon, will be replaced with play_audio2()
 def play_audio(runScript, audio_queue):
     global mouse_event_occurred, keyboard_event_occurred
     while not runScript.is_set():
@@ -97,7 +129,6 @@ def play_audio(runScript, audio_queue):
         # indicate that the task is done
         audio_queue.task_done()
 
-############################################
-#          LISTEN TO PAUSE AUDIO           #
-############################################
-# TODO: Switch from .wav to .mp3/.ogg OR switch from pygame to another package that supports .wav pausing.
+# This function changes wav files to mp3 files
+def wav_to_mp3(runScript, wavFile):
+    pydub.AudioSegment.from_wav(wavFile).export(wavFile[:-4] + ".mp3", format="mp3")

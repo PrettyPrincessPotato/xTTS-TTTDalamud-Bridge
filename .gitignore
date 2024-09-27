@@ -10,6 +10,7 @@ __pycache__/
 *.OLD
 *.wav
 *.env
+*.mp3
 venv/
 secretKeys/
 git-filter-repo
