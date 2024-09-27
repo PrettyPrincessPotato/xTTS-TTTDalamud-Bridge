@@ -14,12 +14,9 @@ TODO:
 '''
 
 # IMPORTS
-import json
 import sys
 import os
 import threading
-import select
-import time
 import warnings
 import logging
 import os
@@ -29,7 +26,7 @@ import my_app.requestProcessor as rP
 import my_app.queueManager as qM
 import my_app.audioPlayer as aP
 import my_app.commandLine as CLI
-from websocket import create_connection
+import my_app.websocket as ws
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -61,29 +58,7 @@ with open(csv_file_path, mode='r', encoding='utf-8') as file:
 # Should the script be running?
 runScript = threading.Event()
 
-############################################
-# CONNECT TO THE WEBSOCKET AND GET MESSAGES#
-############################################
-def websocket_handler():
-    if os.getenv('TEST_MODE') != 'true':  # Check if the script is not running in test mode
-        while not runScript.is_set():
-            try:
-                logger.debug("Attempting to connect to the websocket...")
-                websocket = create_connection("ws://localhost:8080/Messages")
-                logger.debug("Connected!")
-                while not runScript.is_set():
-                    logger.debug("Waiting for message...")
-                    ready_to_read, _, _ = select.select([websocket.sock], [], [], 1)
-                    if ready_to_read:
-                        logger.debug("Got message!")
-                        jsonString = websocket.recv()
-                        jsonFile = json.loads(jsonString)
-                        qM.request_queue.put(jsonFile)
-            except Exception as e:
-                logger.error(f"Failed to connect to the websocket: {e}")
-                time.sleep(1)  # Wait for a second before retrying
-
-# Warning suppressions
+# Warning suppressions -- I forget why I need these...
 warnings.filterwarnings("ignore", "process_audio is not defined")
 warnings.filterwarnings("ignore", "samplerate is not defined")
 
@@ -103,7 +78,7 @@ play_audio_thread.start()
 logger.debug("Started play_audio thread")
 
 # Start the main function in one thread
-websocket_thread = threading.Thread(target=websocket_handler)
+websocket_thread = threading.Thread(target=ws.websocket_handler)
 websocket_thread.start()
 
 # Start the CLI function in another thread

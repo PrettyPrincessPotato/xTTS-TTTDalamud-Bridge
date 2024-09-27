@@ -21,7 +21,7 @@ import my_app.queueManager as qM
 os.environ['TEST_MODE'] = 'true'
 
 # Import your main script
-import main
+import my_app.websocket as ws
 
 # Set up the JSON paths
 # See dataManager.py for details.
@@ -77,4 +77,4 @@ qM.request_queue.put(fake_request)
 runScript = threading.Event()
 
 # Start your script
-main.websocket_handler()
+ws.websocket_handler()
