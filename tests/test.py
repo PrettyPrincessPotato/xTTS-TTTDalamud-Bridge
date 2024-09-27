@@ -11,10 +11,10 @@ To use this script, run it with the F5 key in main.py.
 HEY SILLY, REMEMBER TO RUN THIS WITH F5 IN MAIN.PY. OTHERWISE, IT WON'T WORK.
 '''
 # Imports!
-import queue
 import threading
 import os
 import logging
+import main
 import my_app.dataManager as dM
 import my_app.queueManager as qM
 
