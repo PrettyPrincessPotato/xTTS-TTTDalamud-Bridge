@@ -20,13 +20,12 @@ import threading
 import warnings
 import logging
 import os
-import csv
 import my_app.dataManager as dM # - Unneeded as of now, keeping just in case.
 import my_app.requestProcessor as rP
 import my_app.queueManager as qM
 import my_app.audioPlayer as aP
-import my_app.commandLine as CLI
-import my_app.websocket as ws
+import my_app.commandLine as cLI
+import my_app.websocket as wS
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -45,15 +44,7 @@ else:
 print("Startup successful!")
 logger.info("Starting script")
 
-# Defines the path to the CSV file which is the TTS server URL
-# url should look something like https://ttsapi.ligma.com/tts_to_audio
-csv_file_path = './secretKeys/URL.csv'
-
-# Loads the private CSV so that the TTS server URL doesn't get leaked
-with open(csv_file_path, mode='r', encoding='utf-8') as file:
-    csv_reader = csv.reader(file)
-    # Since the CSV contains only one line with the URL, we can use next() to read it
-    url = next(csv_reader)[0]  # This assumes the URL is in the first column
+url = dM.get_csv()
 
 # Should the script be running?
 runScript = threading.Event()
@@ -78,11 +69,12 @@ play_audio_thread.start()
 logger.debug("Started play_audio thread")
 
 # Start the main function in one thread
-websocket_thread = threading.Thread(target=ws.websocket_handler)
+websocket_thread = threading.Thread(target=wS.websocket_handler, args=(runScript, None)) # For some fucking reason this needs 2 args, None is there for literally no reason. Test var does nothing inside wS.websocket_handler. I don't know why. Please help me.
+# Update it's a tuple-only instead of allowing events if there's only 1 arg. I don't understand but ok go off queen.
 websocket_thread.start()
 
 # Start the CLI function in another thread
-commands_thread = threading.Thread(target=CLI.commands, args=(runScript, procces_request_thread, websocket_thread, play_audio_thread))
+commands_thread = threading.Thread(target=cLI.commands, args=(runScript, procces_request_thread, websocket_thread, play_audio_thread))
 commands_thread.start()
 
 # Wait for all tasks in the queues to be done

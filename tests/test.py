@@ -77,4 +77,4 @@ qM.request_queue.put(fake_request)
 runScript = threading.Event()
 
 # Start your script
-ws.websocket_handler()
+ws.websocket_handler(runScript, None)

@@ -4,7 +4,6 @@ import io
 import logging
 import json
 import random
-import csv
 import requests
 import soundfile as sf
 import my_app.dataManager as dM
@@ -12,16 +11,6 @@ import my_app.queueManager as qM
 from requests import Request
 from inflect import engine
 from requests import Session
-
-# Defines the path to the CSV file which is the TTS server URL
-# url should look something like https://ttsapi.ligma.com/tts_to_audio
-csv_file_path = './secretKeys/URL.csv'
-
-# Loads the private CSV so that the TTS server URL doesn't get leaked
-with open(csv_file_path, mode='r', encoding='utf-8') as file:
-    csv_reader = csv.reader(file)
-    # Since the CSV contains only one line with the URL, we can use next() to read it
-    url = next(csv_reader)[0]  # This assumes the URL is in the first column
 
 # Create an inflect engine, which is used to pluralize words.
 inflect_engine = engine()
@@ -31,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 # Stores the session as a variable so credentials are not needed to be entered every time.
 s = Session()
+
+url = dM.get_csv()
 
 ############################################
 # PROCESS THE REQUESTS AND SEND TO SERVER  #

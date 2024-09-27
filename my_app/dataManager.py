@@ -10,9 +10,23 @@ import os
 import logging
 import random
 import roman
+import csv
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+def get_csv():
+    # Defines the path to the CSV file which is the TTS server URL
+    # url should look something like https://ttsapi.ligma.com/tts_to_audio
+    csv_file_path = './secretKeys/URL.csv'
+
+    # Loads the private CSV so that the TTS server URL doesn't get leaked
+    with open(csv_file_path, mode='r', encoding='utf-8') as file:
+        csv_reader = csv.reader(file)
+        # Since the CSV contains only one line with the URL, we can use next() to read it
+        url = next(csv_reader)[0]  # This assumes the URL is in the first column
+        return url
+
 
 def setup_json_paths():
     # Assuming that 'dataManager.py' is located in the 'my_app' directory

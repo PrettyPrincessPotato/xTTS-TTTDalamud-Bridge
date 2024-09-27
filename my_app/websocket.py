@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 ############################################
 # CONNECT TO THE WEBSOCKET AND GET MESSAGES#
 ############################################
-def websocket_handler(runScript):
+def websocket_handler(runScript, test):
     if os.getenv('TEST_MODE') != 'true':  # Check if the script is not running in test mode
         while not runScript.is_set():
             try:
