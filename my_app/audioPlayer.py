@@ -1,5 +1,5 @@
 ''' 
-    TODO: create a module for the TTS to audio. 99% of what you need is in main.py
+    TODO: 
 '''
 
 # Import the required libraries
@@ -32,35 +32,6 @@ def run_wav(audio_filepath):
 
 # This will be set to True when the pause button is pressed.
 pause_pressed = False
-
-''' -- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX -- 
-# This will be set to True when a mouse event occurs
-mouse_event_occurred = False
-
-# This will be set to True when a keyboard event occurs
-keyboard_event_occurred = False
-
-# Define the mouse and keyboard listeners
-def on_move(x, y):
-    global mouse_event_occurred
-    mouse_event_occurred = time.time()
-
-def on_click(x, y, button, pressed):
-    global mouse_event_occurred
-    mouse_event_occurred = time.time()
-
-def on_key_press(key):-- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX --
-    global keyboard_event_occurred
-    keyboard_event_occurred = time.time()
-
-# Start the mouse listener
-listener = mouse.Listener(on_move=on_move, on_click=on_click)
-listener.start()
-
-# Start the keyboard listener
-keyboard_listener = keyboard.Listener(on_press=on_key_press)
-keyboard_listener.start()
-'''
 
 ############################################
 # PLAY THE AUDIO AND SIMULATE MOUSE CLICK  #
@@ -120,12 +91,6 @@ def play_audio(runScript, audio_queue):
         if jsonFile.get('Source') == 'AddonTalk':
             cooldownTime = 4  # Cooldown time in seconds
             logger.debug(f"Simulating mouse click with cooldown time {cooldownTime}")
-            ''' -- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX --
-            logger.debug(f"Mouse event occurred time check: {time.time() - mouse_event_occurred}")
-            logger.debug(f"Keyboard event occurred time check: {time.time() - keyboard_event_occurred}")
-             if time.time() - mouse_event_occurred > cooldownTime and time.time() - keyboard_event_occurred > cooldownTime: 
-                pyautogui.click(680, 1041)  # random point in main monitor between my 2 monitors, your mileage may vary
-                '''
         # indicate that the task is done
         audio_queue.task_done()
 
