@@ -4,29 +4,30 @@
     TODO: Lower the volume of the audio file. It is too loud.'''
 
 # Import the required libraries
-import pyautogui
+#import pyautogui # Disabled for now, as it is not working on Linux.
 import time
 import queue
 import logging
 import os
-from pynput import mouse, keyboard
+# from pynput import mouse, keyboard
 import pygame
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
-os.environ['SDL_AUDIODRIVER'] = 'directsound'  # 'directsound' or 'alsa' or 'pulse' depending on your system
+os.environ['SDL_AUDIODRIVER'] = 'pulse'  # 'directsound' or 'alsa' or 'pulse' depending on your system
 import pygame.mixer
 
 # Define the audio player function
 def run_wav(audio_filepath):
-    pygame.mixer.init(devicename = "CABLE Input (VB-Audio Virtual Cable)")
+    pygame.mixer.init(devicename = "game-sink")
+    pygame.mixer.music.set_volume(0.1)
     pygame.mixer.music.load(audio_filepath)
     pygame.mixer.music.play()
     while pygame.mixer.music.get_busy():
         pass
     pygame.mixer.quit()
-
+''' -- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX -- 
 # This will be set to True when a mouse event occurs
 mouse_event_occurred = False
 
@@ -42,7 +43,7 @@ def on_click(x, y, button, pressed):
     global mouse_event_occurred
     mouse_event_occurred = time.time()
 
-def on_key_press(key):
+def on_key_press(key):-- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX --
     global keyboard_event_occurred
     keyboard_event_occurred = time.time()
 
@@ -53,6 +54,7 @@ listener.start()
 # Start the keyboard listener
 keyboard_listener = keyboard.Listener(on_press=on_key_press)
 keyboard_listener.start()
+'''
 
 ############################################
 # PLAY THE AUDIO AND SIMULATE MOUSE CLICK  #
@@ -65,7 +67,7 @@ def play_audio(runScript, audio_queue):
             logger.debug(f"Got audio data from queue: {audio_data}")
         except queue.Empty:
             continue
-        audio_file_dir = os.path.abspath("audio_files/audio_file.wav")
+        audio_file_dir = os.path.abspath("xTTS-TTTDalamud-Bridge/audio_files/audio_file.wav")
 
         # Write to a WAV file on disk
         with open(audio_file_dir, "wb") as f:
@@ -83,9 +85,11 @@ def play_audio(runScript, audio_queue):
         if jsonFile.get('Source') == 'AddonTalk':
             cooldownTime = 4  # Cooldown time in seconds
             logger.debug(f"Simulating mouse click with cooldown time {cooldownTime}")
+            ''' -- TEMPORARILY DISABLED, AS IT IS NOT WORKING ON LINUX --
             logger.debug(f"Mouse event occurred time check: {time.time() - mouse_event_occurred}")
             logger.debug(f"Keyboard event occurred time check: {time.time() - keyboard_event_occurred}")
-            if time.time() - mouse_event_occurred > cooldownTime and time.time() - keyboard_event_occurred > cooldownTime:
+             if time.time() - mouse_event_occurred > cooldownTime and time.time() - keyboard_event_occurred > cooldownTime: 
                 pyautogui.click(680, 1041)  # random point in main monitor between my 2 monitors, your mileage may vary
+                '''
         # indicate that the task is done
         audio_queue.task_done()

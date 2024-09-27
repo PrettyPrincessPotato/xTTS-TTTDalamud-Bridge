@@ -1,4 +1,9 @@
 '''
+Originally built on python 3.10.11
+Rebuilt on python 3.10.14
+
+Note: for linux users: sudo dnf install portaudio-devel python3.10-devel
+This command is required for pyaudio to work on linux
 TODO:
     Reorganize files to modulate and organize the project
     Add a way to pause the audio
@@ -69,6 +74,7 @@ logger.info("Starting script")
 s = Session()
 
 # Defines the path to the CSV file which is the TTS server URL
+# url should look something like https://ttsapi.ligma.com/tts_to_audio
 csv_file_path = './secretKeys/URL.csv'
 
 # Loads the private CSV so that the TTS server URL doesn't get leaked
