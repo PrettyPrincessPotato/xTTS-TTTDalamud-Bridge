@@ -69,7 +69,7 @@ play_audio_thread.start()
 logger.debug("Started play_audio thread")
 
 # Start the main function in one thread
-websocket_thread = threading.Thread(target=wS.websocket_handler, args=(runScript, None)) # For some fucking reason this needs 2 args, None is there for literally no reason. Test var does nothing inside wS.websocket_handler. I don't know why. Please help me.
+websocket_thread = threading.Thread(target=wS.websocket_handler, args=(runScript, None)) # For some fucking reason this needs 2 args, None is there for literally no reason. DummyVar does nothing inside wS.websocket_handler. I don't know why. Please help me.
 # Update it's a tuple-only instead of allowing events if there's only 1 arg. I don't understand but ok go off queen.
 websocket_thread.start()
 
