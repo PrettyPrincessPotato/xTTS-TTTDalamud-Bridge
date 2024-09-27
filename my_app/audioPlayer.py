@@ -100,21 +100,4 @@ def play_audio(runScript, audio_queue):
 ############################################
 #          LISTEN TO PAUSE AUDIO           #
 ############################################
-def pause_audio():
-    global pause_pressed
-    logger.debug(f"checking if pygame is running:")
-    if pygame.mixer.get_init() == True:
-        # TODO: impliment
-        pass
-    else:
-        logger.debug(f"button pressed but pygame isn't running, probably unrelated.")
-        logger.debug(f"checking if pause_pressed is true or false anyway to reset, just in case...")
-        if pause_pressed == True:
-            pause_pressed = False
-            logger.debug("pause button was pressed and pygame is not running")
-        else:
-            pass
-        
-
-    
-        
+# TODO: Switch from .wav to .mp3/.ogg OR switch from pygame to another package that supports .wav pausing.

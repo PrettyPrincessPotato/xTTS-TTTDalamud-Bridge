@@ -18,21 +18,6 @@ def commands(runScript, procces_request_thread, main_thread, play_audio_thread):
         elif command == "debug off":
             print("Debug mode off")
             logger.setLevel(logging.INFO)
-        
-        elif command == "play":
-            print("Playing...")
-            pygame.mixer.music.unpause()
-            '''else:
-                print("Error: pygame isn't busy! This usually means there's no audio playing.")
-                logger.error("Error: pygame isn't busy! This usually means there's no audio playing.")'''
-        
-        elif command == "pause":
-            print("Pausing...")
-            if pygame.mixer.music.get_busy():
-                pygame.mixer.music.pause()
-            else:
-                print("Error: pygame isn't busy! This usually means there's no audio playing.")
-                logger.error("Error: pygame isn't busy! This usually means there's no audio playing.")
 
         elif command == "exit":
             print("Shutting down...")
@@ -64,3 +49,20 @@ def commands(runScript, procces_request_thread, main_thread, play_audio_thread):
             print("Plays audio.")
             print("===== exit =====")
             print("exits the program.")
+
+'''  -- Removed as of now, pygame doesn't support .wav pausing
+        elif command == "play":
+            print("Playing...")
+            pygame.mixer.music.unpause()
+            else:
+                print("Error: pygame isn't busy! This usually means there's no audio playing.")
+                logger.error("Error: pygame isn't busy! This usually means there's no audio playing.")
+        
+        elif command == "pause":
+            print("Pausing...")
+            if pygame.mixer.music.get_busy():
+                pygame.mixer.music.pause()
+            else:
+                print("Error: pygame isn't busy! This usually means there's no audio playing.")
+                logger.error("Error: pygame isn't busy! This usually means there's no audio playing.")
+'''

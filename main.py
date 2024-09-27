@@ -44,6 +44,7 @@ else:
 print("Startup successful!")
 logger.info("Starting script")
 
+# Defines url, which is a secret key that I use to contact xTTS.
 url = dM.get_csv()
 
 # Should the script be running?
