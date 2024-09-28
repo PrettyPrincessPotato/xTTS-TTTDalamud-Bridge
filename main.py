@@ -7,7 +7,6 @@ This command is required for pyaudio to work on linux
 This will vary based on your distro.
 
 TODO:
-    Add a way to pause the audio
     Clean up requirements.txt
     Add a way to stop the audio
     Add a way to skip the audio

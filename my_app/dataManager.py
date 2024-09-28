@@ -91,8 +91,8 @@ def get_voice(speaker, gender=None, source=None):
         voice = random.choice(all_voices)
 
     # Check if the source is 'Chat' and if the gender is not defined
-    if source == 'Chat' and gender == 'None':
-        return voice  # If both conditions are met, return the voice without saving it
+    '''if source == 'Chat' and gender == 'None': # --- DEPRECIATED - As of right now gender isn't identifiable in TextToTalk
+        return voice  # If both conditions are met, return the voice without saving it'''
     
     if speaker == '' or speaker == '???':
         return voice # If the speaker is empty, return the voice without saving it
