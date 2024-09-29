@@ -2,6 +2,7 @@ import logging
 import pygame
 import threading
 import my_app.queueManager as qM
+import my_app.audioPlayer as aP
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -27,10 +28,11 @@ def commands(runScript, procces_request_thread, main_thread, play_audio_thread):
             
             for thread in threading.enumerate():
                 logger.debug(thread.name)
-            logger.debug("Attempting to join worker thread")
+            logger.debug("Attempting to join procces_request_thread")
             procces_request_thread.join()
-            logger.debug("Joined worker thread")
+            logger.debug("Joined procces_request_thread")
             main_thread.join()
+            aP.stop_pygame_mixer()  
             logger.debug("Joined main thread")
             play_audio_thread.join()
             logger.debug("Joined play_audio thread")
@@ -57,3 +59,12 @@ def commands(runScript, procces_request_thread, main_thread, play_audio_thread):
         elif command == "pause":
             print("Pausing...")
             pygame.mixer.music.pause()
+
+        elif command == "skip":
+            print("Skipping track...")
+            aP.stop_pygame_mixer()
+        
+        elif command == "stop":
+            print("Stopping...")
+            qM.clear_queue()
+            aP.stop_pygame_mixer()

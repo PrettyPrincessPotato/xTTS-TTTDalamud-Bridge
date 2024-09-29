@@ -97,3 +97,12 @@ def play_audio(runScript, audio_queue):
 # This function changes wav files to mp3 files
 def wav_to_mp3(runScript, wavFile):
     pydub.AudioSegment.from_wav(wavFile).export(wavFile[:-4] + ".mp3", format="mp3")
+
+def stop_pygame_mixer():
+    logger.debug("Shutting down pygame mixer...")
+    if pygame.mixer.music.get_busy:
+        pygame.mixer.quit()
+        logger.debug("Success! pygame.mixer shut down.")
+    else:
+        logger.debug("Pygame isn't busy, ignoring...")
+    

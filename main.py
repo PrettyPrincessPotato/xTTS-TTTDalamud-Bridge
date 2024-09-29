@@ -8,8 +8,6 @@ This will vary based on your distro.
 
 TODO:
     Clean up requirements.txt
-    Add a way to stop the audio
-    Add a way to skip the audio
 '''
 
 # IMPORTS

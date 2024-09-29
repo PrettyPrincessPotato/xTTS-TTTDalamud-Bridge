@@ -1,6 +1,5 @@
 '''The following code defines a modular setup for managing different types of data in a unified manner. 
 The purpose of this module is to provide an easy way to access and manage data across multiple scripts in an organized manner.
-As of writing, the module is incomplete and is a work in progress, and it only really does one thing so far.
 '''
 
 # Function to set up JSON paths, this is so test.py can run while in another folder.
