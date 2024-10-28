@@ -30,9 +30,6 @@ def run_wav(audio_filepath):
         pass
     pygame.mixer.quit()
 
-# This will be set to True when the pause button is pressed.
-pause_pressed = False
-
 ############################################
 # PLAY THE AUDIO AND SIMULATE MOUSE CLICK  #
 ############################################

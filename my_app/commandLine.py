@@ -61,7 +61,7 @@ def commands(runScript, procces_request_thread, main_thread, play_audio_thread):
             pygame.mixer.music.pause()
 
         elif command == "skip":
-            print("Skipping track...")
+            print("Skipping track...") # -- Initial testing, broken.
             aP.stop_pygame_mixer()
         
         elif command == "stop":
