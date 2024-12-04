@@ -2,12 +2,13 @@
 Originally built on python 3.10.11
 Rebuilt on python 3.10.14
 
-Note: for linux users: sudo dnf install portaudio-devel python3.10-devel
+Note: for linux users: sudo dnf install portaudio-devel python3.10-devel [Bazzite cmd]
 This command is required for pyaudio to work on linux
 This will vary based on your distro.
 
 TODO:
     Clean up requirements.txt
+    Speed up speech
 '''
 
 # IMPORTS
